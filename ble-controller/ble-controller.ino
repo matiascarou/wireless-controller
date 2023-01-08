@@ -5,66 +5,57 @@
 #include "Wire.h"
 #include "Sensor.h"
 
-int potPins[] = { A0, A3 };
-int potValues[] = { 0, 0 };
-int potsPrevValue[] = { 0, 0 };
-
 unsigned long prevValue = 0;
 unsigned long actualValue = 0;
 
 MPU6050 sensor;
 
-int16_t ax, ay, az;
-int16_t gx, gy, gz;
+SENSOR ANALOG_POTS[] = { SENSOR("analogInput", 102, A0), SENSOR("analogInput", 103, A3) };
+SENSOR IMUS[] = { SENSOR("ax", 104, 0), SENSOR("ay", 105, 0) };
 
 void setup() {
   Serial.begin(230400);
   Wire.begin();
   Serial.println("Initializing bluetooth");
   sensor.initialize();
+
   if (sensor.testConnection()) {
     Serial.println("Succesfully connected to IMU!");
   } else {
     Serial.println("There was a problem with the IMU initialization");
   }
-  BLEMidiServer.begin("El controller del tuts");
 
-  for (int potPin : potPins) {
-    pinMode(potPin, INPUT);
-  }
   analogReadResolution(10);
-}
 
-int potentiometers() {
-  if (actualValue - prevValue > 40) {
-    for (int i = 0; i < 2; i++) {
-      potValues[i] = constrain(map(analogRead(potPins[i]), 0, 1023, 0, 127), 0, 127);
-      if (potsPrevValue[i] != potValues[i]) {
-        BLEMidiServer.controlChange(0, (102 + i), potValues[i]);
-        potsPrevValue[i] = potValues[i];
-      }
-    }
-    prevValue = actualValue;
+  for (SENSOR ANALOG_POT : ANALOG_POTS) {
+    pinMode(ANALOG_POT._pin, INPUT);
   }
-}
 
-SENSOR mpu = SENSOR("IMU", 0);
+  // BLEMidiServer.begin("El controller del tuts");
+}
 
 void loop() {
   actualValue = millis();
-  if (BLEMidiServer.isConnected()) {
-    //ACCELEROMETER
-    ax = mpu.getRawValue(sensor);
-    ax = constrain(map(ax, 0, 16500, 0, 127), 0, 127);
-    BLEMidiServer.controlChange(0, 102, ax);
-    //POTENTIOMETERS
-    // for (int i = 0; i < 2; i++) {
-    //   potValues[i] = constrain(map(analogRead(potPins[i]), 0, 1023, 0, 127), 0, 127);
-    //   if (potsPrevValue[i] != potValues[i]) {
-    //     BLEMidiServer.controlChange(0, (102 + i), potValues[i]);
-    //     potsPrevValue[i] = potValues[i];
-    //   }
-    // }
+  // if (BLEMidiServer.isConnected()) {
+  for (SENSOR ANALOG_POT : ANALOG_POTS) {
+    const uint16_t sensorRawData = ANALOG_POT.getRawValue(sensor);
+    const int sensorMappedValue = ANALOG_POT.getMappedMidiValue(sensorRawData, 50, 1023);
+    Serial.print("controller_number ");
+    Serial.print(ANALOG_POT._controllerNumber);
+    Serial.print(": ");
+    Serial.print(sensorMappedValue);
+    Serial.print("\t");
   }
-  delay(10);
+  Serial.print("\n");
+  // for (SENSOR imu : IMUS) {
+  //   int16_t axisData = imu.getRawValue(sensor);
+  //   const int sensorMappedValue = imu.getMappedMidiValue(axisData, 500, 16000);
+  //   Serial.print("Axis value for the axis ");
+  //   Serial.print(imu._sensorType);
+  //   Serial.print(": ");
+  //   Serial.println(axisData);
+  //   BLEMidiServer.controlChange(0, imu._controllerNumber, sensorMappedValue);
+  // }
+  delay(40);
+  // }
 }
