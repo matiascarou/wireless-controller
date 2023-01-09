@@ -6,8 +6,10 @@ SENSOR::SENSOR(const char* sensorType, const int controllerNumber, uint8_t pin, 
   _sensorType = sensorType;
   _controllerNumber = controllerNumber;
   _intPin = int_pin;
-  previousValue;
-  currentValue;
+  previousValue = 0;
+  currentValue = 0;
+  dataBuffer = 0;
+  measuresCounter = 0;
 }
 
 void SENSOR::setCurrentValue(int value) {
@@ -19,7 +21,6 @@ void SENSOR::setPreviousValue(int value) {
 }
 
 int16_t SENSOR::getRawValue(MPU6050 sensor) {
-
 
   if (strcmp(_sensorType, "analogInput") == 0) {
     return analogRead(_pin);
@@ -50,18 +51,19 @@ int16_t SENSOR::getRawValue(MPU6050 sensor) {
   return 0;
 }
 
-int16_t SENSOR::getAverageValue(int measureSize, float gap, MPU6050 sensor) {
-  int buffer = 0;
-  for (int i = 0; i < measureSize; i++) {
-    int16_t value = this->getRawValue(sensor);
-    if (value < 0) {
-      value = 0;
-    }
-    buffer += value;
-    delayMicroseconds(gap);
-  }
-  const int16_t result = buffer / measureSize;
-  return result;
+int16_t SENSOR::getAverageValue(int measureSize) {
+  return this->dataBuffer / measureSize;
+  // int buffer = 0;
+  // for (int i = 0; i < measureSize; i++) {
+  //   int16_t value = this->getRawValue(sensor);
+  //   if (value < 0) {
+  //     value = 0;
+  //   }
+  //   buffer += value;
+  //   delayMicroseconds(gap);
+  // }
+  // const int16_t result = buffer / measureSize;
+  // return result;
 }
 
 int SENSOR::getMappedMidiValue(int16_t actualValue, int floor, int ceil) {

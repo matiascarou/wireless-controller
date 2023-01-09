@@ -38,39 +38,63 @@ void setup() {
 unsigned long previousTime = 0;
 unsigned long currentTime = 0;
 
+int measuresBuffer = 1;
+
+const int MAX_NUMBER_OF_MEASURES = 40;
+
 void loop() {
-
   currentTime = millis();
-  // if (BLEMidiServer.isConnected()) {
-  if (currentTime - previousTime > 10) {
-    for (SENSOR& ANALOG_POT : ANALOG_POTS) {
-      const int16_t sensorAverageValue = ANALOG_POT.getRawValue(sensor);
-      const int sensorMappedValue = ANALOG_POT.getMappedMidiValue(sensorAverageValue, 50, 1000);
-      ANALOG_POT.setCurrentValue(sensorMappedValue);
-      if (ANALOG_POT.currentValue != ANALOG_POT.previousValue) {
-        printMessage(ANALOG_POT);
-        BLEMidiServer.controlChange(0, ANALOG_POT._controllerNumber, ANALOG_POT.currentValue);
-        ANALOG_POT.setPreviousValue(ANALOG_POT.currentValue);
+  if (BLEMidiServer.isConnected()) {
+    if (currentTime - previousTime > 10) {
+      for (SENSOR& ANALOG_POT : ANALOG_POTS) {
+        const int16_t sensorAverageValue = ANALOG_POT.getRawValue(sensor);
+        const int sensorMappedValue = ANALOG_POT.getMappedMidiValue(sensorAverageValue, 50, 900);
+        ANALOG_POT.setCurrentValue(sensorMappedValue);
+        if (ANALOG_POT.currentValue != ANALOG_POT.previousValue) {
+          printMessage(ANALOG_POT);
+          BLEMidiServer.controlChange(0, ANALOG_POT._controllerNumber, ANALOG_POT.currentValue);
+          ANALOG_POT.setPreviousValue(ANALOG_POT.currentValue);
+        }
       }
+      previousTime = currentTime;
     }
-    previousTime = currentTime;
-  }
 
-  for (SENSOR& IMU : IMUS) {
-    const bool isSensorActive = digitalRead(IMU._intPin);
-    if (isSensorActive) {
-      uint16_t rawValue = IMU.getAverageValue(15, 500, sensor);
-      const int sensorMappedValue = constrain(map(rawValue, 0, 15500, 0, 127), 0, 127);
-      IMU.setCurrentValue(sensorMappedValue);
-      if (IMU.currentValue != IMU.previousValue) {
-        printMessage(IMU);
-        BLEMidiServer.controlChange(0, IMU._controllerNumber, IMU.currentValue);
-        IMU.setPreviousValue(IMU.currentValue);
+    for (SENSOR& IMU : IMUS) {
+      const bool isSensorActive = digitalRead(IMU._intPin);
+      if (isSensorActive) {
+        int16_t rawValue = IMU.getRawValue(sensor);
+        if (rawValue < 0) {
+          rawValue = 0;
+        }
+        // Serial.print("Raw value: ");
+        // Serial.println(rawValue);
+        IMU.dataBuffer += rawValue;
+        if (IMU.measuresCounter % MAX_NUMBER_OF_MEASURES == 0) {
+          // Serial.print('\t');
+          // Serial.print("Measures counter: ");
+          // Serial.print(IMU.measuresCounter);
+          // Serial.print('\t');
+          // Serial.print("Data buffer: ");
+          // Serial.print(IMU.dataBuffer);
+          // Serial.print("\t");
+          int16_t averageValue = IMU.getAverageValue(MAX_NUMBER_OF_MEASURES);
+          // Serial.print("Average value: ");
+          // Serial.println(averageValue);
+          const int sensorMappedValue = constrain(map(averageValue, 50, 15000, 0, 127), 0, 127);
+          IMU.setCurrentValue(sensorMappedValue);
+          if (IMU.currentValue != IMU.previousValue) {
+            printMessage(IMU);
+            BLEMidiServer.controlChange(0, IMU._controllerNumber, IMU.currentValue);
+            IMU.setPreviousValue(IMU.currentValue);
+          }
+          IMU.measuresCounter = 0;
+          IMU.dataBuffer = 0;
+        }
+        IMU.measuresCounter += 1;
       }
     }
+    delay(1);
   }
-  delay(1);
-  // }
 }
 
 void printMessage(SENSOR sensorInstance) {
@@ -81,3 +105,17 @@ void printMessage(SENSOR sensorInstance) {
   Serial.print(sensorInstance.currentValue);
   Serial.print('\n');
 }
+
+// Yes, here is an example of a more complex filter called an exponential moving average (EMA) filter:
+// #define ALPHA 0.1
+// double last_average = 0;
+
+// void loop() {
+//   int sensor_reading = analogRead(A0);
+//   double average = (sensor_reading * ALPHA) + (last_average * (1.0 - ALPHA));
+//   last_average = average;
+//   Serial.println(average);
+//   delay(1);
+// }
+
+// You can also use more advanced filters such as a Kalman filter or a Butterworth filter if you need even more performance. However, these filters can be more complex to implement and may require more computational resources.
