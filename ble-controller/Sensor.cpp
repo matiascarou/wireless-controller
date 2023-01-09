@@ -18,7 +18,7 @@ void SENSOR::setPreviousValue(int value) {
   this->previousValue = value;
 }
 
-uint16_t SENSOR::getRawValue(MPU6050 sensor) {
+int16_t SENSOR::getRawValue(MPU6050 sensor) {
 
 
   if (strcmp(_sensorType, "analogInput") == 0) {
@@ -50,7 +50,7 @@ uint16_t SENSOR::getRawValue(MPU6050 sensor) {
   return 0;
 }
 
-int16_t SENSOR::getAverageValue(int measureSize, int gap, MPU6050 sensor) {
+int16_t SENSOR::getAverageValue(int measureSize, float gap, MPU6050 sensor) {
   int buffer = 0;
   for (int i = 0; i < measureSize; i++) {
     int16_t value = this->getRawValue(sensor);
@@ -58,7 +58,7 @@ int16_t SENSOR::getAverageValue(int measureSize, int gap, MPU6050 sensor) {
       value = 0;
     }
     buffer += value;
-    delay(gap);
+    delayMicroseconds(gap);
   }
   const int16_t result = buffer / measureSize;
   return result;

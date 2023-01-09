@@ -15,9 +15,9 @@ public:
   uint8_t _intPin;
   int previousValue;
   int currentValue;
-  uint16_t getRawValue(MPU6050 sensor);
+  int16_t getRawValue(MPU6050 sensor);
   int getMappedMidiValue(int16_t actualValue, int floor, int ceil);
-  int16_t getAverageValue(int measureSize, int gap, MPU6050 sensor);
+  int16_t getAverageValue(int measureSize, float gap, MPU6050 sensor);
   void setCurrentValue(int value);
   void setPreviousValue(int value);
 };
