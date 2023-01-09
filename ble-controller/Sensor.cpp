@@ -1,14 +1,21 @@
-// LED.cpp
 #include "Sensor.h"
 #include "MPU6050.h"
 
-SENSOR::SENSOR(const char* sensorType, const int controllerNumber, uint8_t pin) {
+SENSOR::SENSOR(const char* sensorType, const int controllerNumber, uint8_t pin, uint8_t int_pin) {
   _pin = pin;
-  previousValue = 0;
-  actualValue = 0;
   _sensorType = sensorType;
   _controllerNumber = controllerNumber;
-  // pinMode(ledPin, OUTPUT);
+  _intPin = int_pin;
+  previousValue;
+  currentValue;
+}
+
+void SENSOR::setCurrentValue(int value) {
+  this->currentValue = value;
+}
+
+void SENSOR::setPreviousValue(int value) {
+  this->previousValue = value;
 }
 
 uint16_t SENSOR::getRawValue(MPU6050 sensor) {
@@ -43,16 +50,20 @@ uint16_t SENSOR::getRawValue(MPU6050 sensor) {
   return 0;
 }
 
-int SENSOR::getMappedMidiValue(int16_t actualValue, int floor, int ceil) {
-  return constrain(map(actualValue, floor, ceil, 0, 127), 0, 127);
-}
-
-int SENSOR::getAverageValue(unsigned long value, int measureSize, int gap) {
+int16_t SENSOR::getAverageValue(int measureSize, int gap, MPU6050 sensor) {
   int buffer = 0;
   for (int i = 0; i < measureSize; i++) {
-    value = constrain(map(value, 0, 16500, 0, 127), 0, 127);
+    int16_t value = this->getRawValue(sensor);
+    if (value < 0) {
+      value = 0;
+    }
     buffer += value;
     delay(gap);
   }
-  return buffer / measureSize;
+  const int16_t result = buffer / measureSize;
+  return result;
+}
+
+int SENSOR::getMappedMidiValue(int16_t actualValue, int floor, int ceil) {
+  return constrain(map(actualValue, floor, ceil, 0, 127), 0, 127);
 }

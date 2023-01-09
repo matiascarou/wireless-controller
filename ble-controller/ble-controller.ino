@@ -11,7 +11,7 @@ unsigned long actualValue = 0;
 MPU6050 sensor;
 
 SENSOR ANALOG_POTS[] = { SENSOR("analogInput", 102, A0), SENSOR("analogInput", 103, A3) };
-SENSOR IMUS[] = { SENSOR("ax", 104, 0), SENSOR("ay", 105, 0) };
+SENSOR IMUS[] = { SENSOR("ax", 104, 0, 18), SENSOR("ay", 105, 0, 19) };
 
 void setup() {
   Serial.begin(230400);
@@ -31,31 +31,49 @@ void setup() {
     pinMode(ANALOG_POT._pin, INPUT);
   }
 
-  // BLEMidiServer.begin("El controller del tuts");
+  for (SENSOR IMU : IMUS) {
+    pinMode(IMU._intPin, INPUT);
+  }
+
+  BLEMidiServer.begin("El controller del tuts");
 }
+
+int previousValue = 0;
+
 
 void loop() {
   actualValue = millis();
-  // if (BLEMidiServer.isConnected()) {
-  for (SENSOR ANALOG_POT : ANALOG_POTS) {
-    const uint16_t sensorRawData = ANALOG_POT.getRawValue(sensor);
-    const int sensorMappedValue = ANALOG_POT.getMappedMidiValue(sensorRawData, 50, 1023);
-    Serial.print("controller_number ");
-    Serial.print(ANALOG_POT._controllerNumber);
-    Serial.print(": ");
-    Serial.print(sensorMappedValue);
-    Serial.print("\t");
+  if (BLEMidiServer.isConnected()) {
+    // for (SENSOR& ANALOG_POT : ANALOG_POTS) {
+    //   const uint16_t sensorRawData = ANALOG_POT.getRawValue(sensor);
+    //   const int sensorMappedValue = ANALOG_POT.getMappedMidiValue(sensorRawData, 50, 1023);
+    //   ANALOG_POT.setCurrentValue(sensorMappedValue);
+    //   if (ANALOG_POT.currentValue != ANALOG_POT.previousValue) {
+    //     Serial.print(ANALOG_POT._sensorType);
+    //     Serial.print(": ");
+    //     Serial.print(ANALOG_POT.currentValue);
+    //     Serial.print('\n');
+    //     BLEMidiServer.controlChange(0, ANALOG_POT._controllerNumber, sensorMappedValue);
+    //     ANALOG_POT.setPreviousValue(ANALOG_POT.currentValue);
+    //   }
+    // }
+
+    for (SENSOR& IMU : IMUS) {
+      const bool isSensorActive = digitalRead(IMU._intPin);
+      if (isSensorActive) {
+        uint16_t rawValue = IMU.getAverageValue(20, 1, sensor);
+        const int sensorMappedValue = constrain(map(rawValue, 0, 15500, 0, 127), 0, 127);
+        IMU.setCurrentValue(sensorMappedValue);
+        if (IMU.currentValue != IMU.previousValue) {
+          // Serial.print(IMU._sensorType);
+          // Serial.print(": ");
+          // Serial.print(IMU.currentValue);
+          // Serial.print('\n');
+          IMU.setPreviousValue(IMU.currentValue);
+          BLEMidiServer.controlChange(0, IMU._controllerNumber, IMU.currentValue);
+        }
+      }
+    }
+    delay(1);
   }
-  Serial.print("\n");
-  // for (SENSOR imu : IMUS) {
-  //   int16_t axisData = imu.getRawValue(sensor);
-  //   const int sensorMappedValue = imu.getMappedMidiValue(axisData, 500, 16000);
-  //   Serial.print("Axis value for the axis ");
-  //   Serial.print(imu._sensorType);
-  //   Serial.print(": ");
-  //   Serial.println(axisData);
-  //   BLEMidiServer.controlChange(0, imu._controllerNumber, sensorMappedValue);
-  // }
-  delay(40);
-  // }
 }
