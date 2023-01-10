@@ -17,11 +17,14 @@ public:
   int currentValue;
   unsigned long dataBuffer;
   int measuresCounter;
+  MPU6050 sensor;
   int16_t getRawValue(MPU6050 sensor);
   int getMappedMidiValue(int16_t actualValue, int floor, int ceil);
-  int16_t getAverageValue(int measureSize);
+  int16_t getAverageValue(int measureSize, MPU6050 sensor, char* behaviour = "non-blocking", int gap = 1);
+  int getValuesBetweenRanges();
   void setCurrentValue(int value);
   void setPreviousValue(int value);
+  // void hookUpImu();
 };
 
 #endif

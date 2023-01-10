@@ -5,7 +5,17 @@
 #include "Wire.h"
 #include "Sensor.h"
 
+void printMessage(SENSOR sensorInstance) {
+  Serial.print(sensorInstance._sensorType);
+  Serial.print("::");
+  Serial.print(sensorInstance._controllerNumber);
+  Serial.print(": ");
+  Serial.println(sensorInstance.currentValue);
+}
+
 MPU6050 sensor;
+
+const bool DEBUG = false;
 
 SENSOR ANALOG_POTS[] = { SENSOR("analogInput", 102, A0), SENSOR("analogInput", 103, A3) };
 SENSOR IMUS[] = { SENSOR("ax", 104, 0, 18), SENSOR("ay", 105, 0, 19) };
@@ -40,70 +50,50 @@ unsigned long currentTime = 0;
 
 int measuresBuffer = 1;
 
-const int MAX_NUMBER_OF_MEASURES = 40;
+const int MAX_NUMBER_OF_MEASURES = 25;
 
 void loop() {
   currentTime = millis();
-  if (BLEMidiServer.isConnected()) {
-    if (currentTime - previousTime > 10) {
-      for (SENSOR& ANALOG_POT : ANALOG_POTS) {
-        const int16_t sensorAverageValue = ANALOG_POT.getRawValue(sensor);
-        const int sensorMappedValue = ANALOG_POT.getMappedMidiValue(sensorAverageValue, 50, 900);
-        ANALOG_POT.setCurrentValue(sensorMappedValue);
-        if (ANALOG_POT.currentValue != ANALOG_POT.previousValue) {
+  // if (BLEMidiServer.isConnected()) {
+  if (currentTime - previousTime > 10) {
+    for (SENSOR& ANALOG_POT : ANALOG_POTS) {
+      const int16_t sensorAverageValue = ANALOG_POT.getRawValue(sensor);
+      const int sensorMappedValue = ANALOG_POT.getMappedMidiValue(sensorAverageValue, 20, 1023);
+      ANALOG_POT.setCurrentValue(sensorMappedValue);
+      if (ANALOG_POT.currentValue != ANALOG_POT.previousValue) {
+        if (DEBUG) {
           printMessage(ANALOG_POT);
-          BLEMidiServer.controlChange(0, ANALOG_POT._controllerNumber, ANALOG_POT.currentValue);
-          ANALOG_POT.setPreviousValue(ANALOG_POT.currentValue);
         }
+        BLEMidiServer.controlChange(0, ANALOG_POT._controllerNumber, ANALOG_POT.currentValue);
+        ANALOG_POT.setPreviousValue(ANALOG_POT.currentValue);
       }
-      previousTime = currentTime;
     }
+    previousTime = currentTime;
+  }
 
-    for (SENSOR& IMU : IMUS) {
-      const bool isSensorActive = digitalRead(IMU._intPin);
-      if (isSensorActive) {
-        int16_t rawValue = IMU.getRawValue(sensor);
-        if (rawValue < 0) {
-          rawValue = 0;
+  for (SENSOR& IMU : IMUS) {
+    const bool isSensorActive = digitalRead(IMU._intPin);
+    if (isSensorActive) {
+      int16_t rawValue = IMU.getRawValue(sensor);
+      int16_t normalizedRawValue = constrain(rawValue, 0, 32767);
+      IMU.dataBuffer += normalizedRawValue;
+      if (IMU.measuresCounter % MAX_NUMBER_OF_MEASURES == 0) {
+        int16_t averageValue = IMU.getAverageValue(MAX_NUMBER_OF_MEASURES, sensor);
+        const int sensorMappedValue = constrain(map(averageValue, 100, 16000, 0, 127), 0, 127);
+        IMU.setCurrentValue(sensorMappedValue);
+        if (DEBUG) {
+          printMessage(IMU);
         }
-        // Serial.print("Raw value: ");
-        // Serial.println(rawValue);
-        IMU.dataBuffer += rawValue;
-        if (IMU.measuresCounter % MAX_NUMBER_OF_MEASURES == 0) {
-          // Serial.print('\t');
-          // Serial.print("Measures counter: ");
-          // Serial.print(IMU.measuresCounter);
-          // Serial.print('\t');
-          // Serial.print("Data buffer: ");
-          // Serial.print(IMU.dataBuffer);
-          // Serial.print("\t");
-          int16_t averageValue = IMU.getAverageValue(MAX_NUMBER_OF_MEASURES);
-          // Serial.print("Average value: ");
-          // Serial.println(averageValue);
-          const int sensorMappedValue = constrain(map(averageValue, 50, 15000, 0, 127), 0, 127);
-          IMU.setCurrentValue(sensorMappedValue);
-          if (IMU.currentValue != IMU.previousValue) {
-            printMessage(IMU);
-            BLEMidiServer.controlChange(0, IMU._controllerNumber, IMU.currentValue);
-            IMU.setPreviousValue(IMU.currentValue);
-          }
-          IMU.measuresCounter = 0;
-          IMU.dataBuffer = 0;
-        }
-        IMU.measuresCounter += 1;
+        BLEMidiServer.controlChange(0, IMU._controllerNumber, IMU.currentValue);
+        IMU.measuresCounter = 0;
+        IMU.dataBuffer = 0;
+        const int data = IMU.getValuesBetweenRanges();
       }
+      IMU.measuresCounter += 1;
     }
     delay(1);
+    // }
   }
-}
-
-void printMessage(SENSOR sensorInstance) {
-  Serial.print(sensorInstance._sensorType);
-  Serial.print("::");
-  Serial.print(sensorInstance._controllerNumber);
-  Serial.print(": ");
-  Serial.print(sensorInstance.currentValue);
-  Serial.print('\n');
 }
 
 // Yes, here is an example of a more complex filter called an exponential moving average (EMA) filter:
