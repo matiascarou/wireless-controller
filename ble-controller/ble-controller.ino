@@ -88,7 +88,7 @@ void loop() {
           // BLEMidiServer.controlChange(0, IMU._controllerNumber, IMU.currentValue);
           std::vector< int > messages = IMU.getValuesBetweenRanges();
           Serial.println(">>>>>>>>>>>>>>>>>");
-          for (int message : messages) {            
+          for (int message : messages) {
             BLEMidiServer.controlChange(0, IMU._controllerNumber, message);
             Serial.print("Message: ");
             Serial.println(message);

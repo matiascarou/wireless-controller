@@ -94,10 +94,10 @@ std::vector< int > SENSOR::getValuesBetweenRanges(int gap) {
     std::generate(steps.begin(), steps.end(), [startValue, increment]() mutable {
       auto value = startValue;
       startValue += increment;
-      if (value >= 124) {
+      if (value >= 122) {
         return 127;
       }
-      if (value <= 2) {
+      if (value <= 3) {
         return 0;
       }
       return value;
