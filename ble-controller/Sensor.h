@@ -2,6 +2,7 @@
 #define SENSOR_h
 #include <Arduino.h>
 #include "MPU6050.h"
+#include <vector>
 
 class SENSOR {
   // private:
@@ -21,7 +22,7 @@ public:
   int16_t getRawValue(MPU6050 sensor);
   int getMappedMidiValue(int16_t actualValue, int floor, int ceil);
   int16_t getAverageValue(int measureSize, MPU6050 sensor, char* behaviour = "non-blocking", int gap = 1);
-  int getValuesBetweenRanges();
+  std::vector< int > getValuesBetweenRanges(int gap = 1);
   void setCurrentValue(int value);
   void setPreviousValue(int value);
   // void hookUpImu();
