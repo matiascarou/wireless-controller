@@ -117,22 +117,3 @@ std::vector< int > SENSOR::getValuesBetweenRanges(int gap) {
 int SENSOR::getMappedMidiValue(int16_t actualValue, int floor, int ceil) {
   return constrain(map(actualValue, floor, ceil, 0, 127), 0, 127);
 }
-
-/////////////////////////////////////////////////////////////////////////////
-// std::vector< int > getRanges(int currentValue, int previousValue) {
-//   int samples = currentValue - previousValue;
-//   if (currentValue < previousValue) {
-//       samples = previousValue - currentValue;
-//   }
-//   int index = previousValue;
-//   std::vector< int > steps(samples + 1);
-//   std::cout << "Array size: " << steps.size() << "\n";
-//   std::generate(steps.begin(), steps.end(), [&index, currentValue, previousValue]() {
-//     return currentValue > previousValue ? index++ : index--;
-//   });
-//   if (currentValue == previousValue) {
-//       return steps;
-//   }
-//   steps.erase(steps.begin());
-//   return steps;
-// }

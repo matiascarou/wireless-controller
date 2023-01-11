@@ -21,7 +21,7 @@ SENSOR ANALOG_POTS[] = { SENSOR("analogInput", 102, A0), SENSOR("analogInput", 1
 SENSOR IMUS[] = { SENSOR("ax", 104, 0, 18), SENSOR("ay", 105, 0, 19) };
 
 void setup() {
-  Serial.begin(460800);
+  Serial.begin(230400);
   Wire.begin();
   Serial.println("Initializing bluetooth");
   sensor.initialize();
@@ -87,19 +87,19 @@ void loop() {
           }
           // BLEMidiServer.controlChange(0, IMU._controllerNumber, IMU.currentValue);
           std::vector< int > messages = IMU.getValuesBetweenRanges();
-          Serial.println(">>>>>>>>>>>>>>>>>");
+          // Serial.println(">>>>>>>>>>>>>>>>>");
           for (int message : messages) {
             BLEMidiServer.controlChange(0, IMU._controllerNumber, message);
-            Serial.print("Message: ");
-            Serial.println(message);
+            // Serial.print("Message: ");
+            // Serial.println(message);
           }
-          Serial.println(">>>>>>>>>>>>>>>>>");
+          // Serial.println(">>>>>>>>>>>>>>>>>");
           IMU.measuresCounter = 0;
           IMU.dataBuffer = 0;
         }
         IMU.measuresCounter += 1;
       }
-      delayMicroseconds(2000);
+      delayMicroseconds(1000);
     }
   }
 }
