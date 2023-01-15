@@ -4,32 +4,25 @@
 #include "MPU6050.h"
 #include "Wire.h"
 #include "Sensor.h"
-
-void printMessage(SENSOR sensorInstance) {
-  Serial.print(sensorInstance._sensorType);
-  Serial.print("::");
-  Serial.print(sensorInstance._controllerNumber);
-  Serial.print(": ");
-  Serial.println(sensorInstance.currentValue);
-}
+#include <iostream>
+#include <algorithm>
 
 MPU6050 sensor;
 
-const bool DEBUG = false;
-
 SENSOR ANALOG_POTS[] = { SENSOR("analogInput", 102, A0), SENSOR("analogInput", 103, A3) };
-SENSOR IMUS[] = { SENSOR("ax", 104, 0, 18), SENSOR("ay", 105, 0, 19) };
+SENSOR IMUS[] = { SENSOR("ax", 105, 0, 18), SENSOR("ay", 106, 0, 19) };
+SENSOR sonar = SENSOR("sonar", 107, 13);
 
 void setup() {
   Serial.begin(230400);
   Wire.begin();
-  Serial.println("Initializing bluetooth");
+  Serial.println(F("Initializing bluetooth"));
   sensor.initialize();
 
   if (sensor.testConnection()) {
-    Serial.println("Succesfully connected to IMU!");
+    Serial.println(F("Succesfully connected to IMU!"));
   } else {
-    Serial.println("There was a problem with the IMU initialization");
+    Serial.println(F("There was a problem with the IMU initialization"));
   }
 
   analogReadResolution(10);
@@ -42,29 +35,44 @@ void setup() {
     pinMode(IMU._intPin, INPUT);
   }
 
-  BLEMidiServer.begin("El controller del tuts");
+  pinMode(sonar._pin, INPUT);
+
+  BLEMidiServer.begin("Le tuts controller");
 }
 
 unsigned long previousTime = 0;
 unsigned long currentTime = 0;
 
-int measuresBuffer = 1;
-
-const int MAX_NUMBER_OF_MEASURES = 15;
+const int IMU_MAX_NUMBER_OF_MEASURES = 15;
+const int SONAR_MAX_NUMBER_OF_MEASURES = 3;
 
 void loop() {
   currentTime = millis();
   if (BLEMidiServer.isConnected()) {
+
+    // const auto sonarRawValue = sonar.getRawValue(sensor);
+    // sonar.dataBuffer += sonarRawValue;
+    // if (sonar.measuresCounter % SONAR_MAX_NUMBER_OF_MEASURES == 0) {
+    //   sonar.currentValue = sonar.getAverageValue(SONAR_MAX_NUMBER_OF_MEASURES, sensor);
+    //   if (sonar.previousValue != sonar.currentValue) {
+    //     if (DEBUG) {
+    //       printMessage(sonar);
+    //     }
+    //     BLEMidiServer.controlChange(0, sonar._controllerNumber, sonar.currentValue);
+    //     sonar.previousValue = sonar.currentValue;
+    //   }
+    //   sonar.measuresCounter = 0;
+    //   sonar.dataBuffer = 0;
+    // }
+    // sonar.measuresCounter += 1;
+
     if (currentTime - previousTime > 10) {
       for (SENSOR& ANALOG_POT : ANALOG_POTS) {
         const int16_t sensorAverageValue = ANALOG_POT.getRawValue(sensor);
         const int sensorMappedValue = ANALOG_POT.getMappedMidiValue(sensorAverageValue, 20, 1023);
         ANALOG_POT.setCurrentValue(sensorMappedValue);
         if (ANALOG_POT.currentValue != ANALOG_POT.previousValue) {
-          if (DEBUG) {
-            printMessage(ANALOG_POT);
-          }
-          BLEMidiServer.controlChange(0, ANALOG_POT._controllerNumber, ANALOG_POT.currentValue);
+          ANALOG_POT.sendMidiMessage(BLEMidiServer, "controlChange", ANALOG_POT.currentValue);
           ANALOG_POT.setPreviousValue(ANALOG_POT.currentValue);
         }
       }
@@ -77,43 +85,21 @@ void loop() {
         int16_t rawValue = IMU.getRawValue(sensor);
         int16_t normalizedRawValue = constrain(rawValue, 0, 32767);
         IMU.dataBuffer += normalizedRawValue;
-        if (IMU.measuresCounter % MAX_NUMBER_OF_MEASURES == 0) {
+        if (IMU.measuresCounter % IMU_MAX_NUMBER_OF_MEASURES == 0) {
           IMU.setPreviousValue(IMU.currentValue);
-          int16_t averageValue = IMU.getAverageValue(MAX_NUMBER_OF_MEASURES, sensor);
+          int16_t averageValue = IMU.runNonBlockingAverageFilter(IMU_MAX_NUMBER_OF_MEASURES);
           const int sensorMappedValue = constrain(map(averageValue, 100, 15500, 0, 127), 0, 127);
           IMU.setCurrentValue(sensorMappedValue);
-          if (DEBUG) {
-            printMessage(IMU);
-          }
-          // BLEMidiServer.controlChange(0, IMU._controllerNumber, IMU.currentValue);
           std::vector< int > messages = IMU.getValuesBetweenRanges();
-          // Serial.println(">>>>>>>>>>>>>>>>>");
           for (int message : messages) {
-            BLEMidiServer.controlChange(0, IMU._controllerNumber, message);
-            // Serial.print("Message: ");
-            // Serial.println(message);
+            IMU.sendMidiMessage(BLEMidiServer, "controlChange", message);
           }
-          // Serial.println(">>>>>>>>>>>>>>>>>");
           IMU.measuresCounter = 0;
           IMU.dataBuffer = 0;
         }
         IMU.measuresCounter += 1;
       }
-      delayMicroseconds(1000);
     }
+    delay(1);
   }
 }
-
-// Yes, here is an example of a more complex filter called an exponential moving average (EMA) filter:
-// #define ALPHA 0.1
-// double last_average = 0;
-
-// void loop() {
-//   int sensor_reading = analogRead(A0);
-//   double average = (sensor_reading * ALPHA) + (last_average * (1.0 - ALPHA));
-//   last_average = average;
-//   Serial.println(average);
-//   delay(1);
-// }
-
-// You can also use more advanced filters such as a Kalman filter or a Butterworth filter if you need even more performance. However, these filters can be more complex to implement and may require more computational resources.
