@@ -1,19 +1,17 @@
 #include "Sensor.h"
 #include "MPU6050.h"
-// #include <vector>
-// #include <algorithm>
-// #include <numeric>
 
 SENSOR::SENSOR(const std::string sensorType, const uint8_t controllerNumber, uint8_t pin, uint8_t intPin) {
   _pin = pin;
-  _controllerNumber = controllerNumber;
+  _controllerNumber = char(controllerNumber);
+  _channel = char(0);
+  _statusCode = char(176);
   _intPin = intPin;
   previousValue = 0;
   currentValue = 0;
   dataBuffer = 0;
   measuresCounter = 0;
   filteredExponentialValue = 0;
-  // strcpy(_sensorType, sensorType);
   _sensorType = sensorType;
 }
 
@@ -26,40 +24,6 @@ void SENSOR::setPreviousValue(uint8_t value) {
 }
 
 int16_t SENSOR::getRawValue(MPU6050 sensor) {
-
-  // if (strcmp(_sensorType, "analogInput") == 0) {
-  //   return analogRead(_pin);
-  // }
-
-  // if (strcmp(_sensorType, "sonar") == 0) {
-  //   const int16_t pulse = pulseIn(_pin, HIGH);
-  //   const int16_t pulgadas = pulse / 147;
-  //   return pulgadas;
-  // }
-
-  // if (strcmp(_sensorType, "ax") == 0) {
-  //   return sensor.getAccelerationX();
-  // }
-
-  // if (strcmp(_sensorType, "ay") == 0) {
-  //   return sensor.getAccelerationY();
-  // }
-
-  // if (strcmp(_sensorType, "az") == 0) {
-  //   return sensor.getAccelerationZ();
-  // }
-
-  // if (strcmp(_sensorType, "gx") == 0) {
-  //   return sensor.getRotationX();
-  // }
-
-  // if (strcmp(_sensorType, "gy") == 0) {
-  //   return sensor.getRotationY();
-  // }
-
-  // if (strcmp(_sensorType, "gz") == 0) {
-  //   return sensor.getRotationZ();
-  // }
 
   if (_sensorType == "analogInput") {
     return analogRead(_pin);
@@ -93,10 +57,6 @@ int16_t SENSOR::getRawValue(MPU6050 sensor) {
 
   if (_sensorType == "gz") {
     return sensor.getRotationZ();
-  }
-
-  if (_sensorType == "analogInput") {
-    return analogRead(_pin);
   }
 
   return 0;

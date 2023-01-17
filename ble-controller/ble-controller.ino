@@ -1,4 +1,5 @@
-// Sketch uses 1096577 bytes (83%) of program storage space.
+// Sketch uses 1097769 bytes (83%) of program storage space.
+//  1096797
 #include <Arduino.h>
 #include <BLEMidi.h>
 #include "I2Cdev.h"
@@ -43,6 +44,8 @@ void setup() {
   pinMode(sonar._pin, INPUT);
 
   BLEMidiServer.begin("Le tuts controller");
+
+  Serial.println("Sensors ready ʕノ•ᴥ•ʔノ");
 }
 
 unsigned long previousTime = 0;
@@ -80,7 +83,6 @@ void loop() {
           IMU.setCurrentValue(sensorMappedValue);
           std::vector< uint8_t > messages = IMU.getValuesBetweenRanges();
           for (uint8_t message : messages) {
-            // printMessage(message);
             IMU.sendMidiMessage(BLEMidiServer, "controlChange", message);
           }
           IMU.measuresCounter = 0;

@@ -3,12 +3,13 @@
 #include <Arduino.h>
 #include "MPU6050.h"
 #include <BLEMidi.h>
-// #include <vector>
 
 class SENSOR {
 private:
   uint8_t filteredExponentialValue;
-  uint8_t _controllerNumber;
+  char _controllerNumber;
+  char _channel;
+  char _statusCode;
   std::string _sensorType;
 public:
   SENSOR(const std::string sensorType, const uint8_t controllerNumber, const uint8_t pin = 0, const uint8_t intPin = 0);
@@ -28,15 +29,20 @@ public:
   void setCurrentValue(uint8_t value);
   void setPreviousValue(uint8_t value);
 
-  void sendMidiMessage(BLEMidiServerClass serverInstance, std::string messageType, uint8_t value, std::string mode = "BLE") {
-    if (mode == "BLE") {
-      if (messageType == "controlChange") {
-        serverInstance.controlChange(0, _controllerNumber, value);
+  void setMidiChannel(uint8_t channel) {
+    _channel = channel;
+  }
+
+  void sendMidiMessage(BLEMidiServerClass serverInstance, char messageType[], uint8_t value, char mode[] = "BLE") {
+    if (strcmp(mode, "BLE") == 0) {
+      if (strcmp(messageType, "controlChange") == 0) {
+        serverInstance.controlChange(_channel, _controllerNumber, char(value));
       }
-    } else {
-      Serial.write(176);
+    }
+    if (strcmp(mode, "Serial") == 0) {
+      Serial.write(_statusCode);
       Serial.write(_controllerNumber);
-      Serial.write(value);
+      Serial.write(char(value));
     }
   }
 };
