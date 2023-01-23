@@ -15,12 +15,32 @@ SENSOR::SENSOR(const std::string sensorType, const uint8_t controllerNumber, uin
   _sensorType = sensorType;
 }
 
+bool SENSOR::isActive() {
+  return !!digitalRead(this->_intPin);
+};
+
 void SENSOR::setCurrentValue(uint8_t value) {
   this->currentValue = value;
 }
 
 void SENSOR::setPreviousValue(uint8_t value) {
   this->previousValue = value;
+}
+
+void SENSOR::setMeasuresCounter(uint8_t value) {
+  if (value == 0) {
+    this->measuresCounter = value;
+  } else {
+    this->measuresCounter += value;
+  }
+}
+
+void SENSOR::setDataBuffer(int16_t value) {
+  if (value == 0) {
+    this->dataBuffer = value;
+  } else {
+    this->dataBuffer += value;
+  }
 }
 
 int16_t SENSOR::getRawValue(MPU6050 sensor) {
@@ -98,10 +118,10 @@ std::vector< uint8_t > SENSOR::getValuesBetweenRanges(uint8_t gap) {
   if (currentValue < previousValue) {
     samples = previousValue - currentValue;
   }
-  uint8_t startValue = previousValue;
   std::vector< uint8_t > steps(samples / gap);
+  uint8_t startValue = previousValue;
+  // uint8_t increment = currentValue > previousValue ? gap : -gap;
   // if (gap > 1) {
-  uint8_t increment = currentValue > previousValue ? gap : -gap;
   //   std::generate(steps.begin(), steps.end(), [startValue, increment]() mutable {
   //     uint8_t value = startValue;
   //     startValue += increment;

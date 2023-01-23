@@ -1,5 +1,3 @@
-// Sketch uses 1097769 bytes (83%) of program storage space.
-//  1096797
 #include <Arduino.h>
 #include <BLEMidi.h>
 #include "I2Cdev.h"
@@ -9,9 +7,24 @@
 
 MPU6050 sensor;
 
+/**
+* This script is intended to work both with BLE and Xbee protocols
+* The serial approach will need of an Xbee receptor to be previously hooked up
+* And listening to the coordinator's output
+**/
+const char COMMUNICATION_TYPE[] = "BLE";
+
 SENSOR ANALOG_POTS[] = { SENSOR("analogInput", 102, A0), SENSOR("analogInput", 103, A3) };
 SENSOR IMUS[] = { SENSOR("ax", 105, 0, 18), SENSOR("ay", 106, 0, 19) };
 SENSOR sonar = SENSOR("sonar", 107, 13);
+
+/**
+* Comment out lines below for STM32 + Xbees support
+* BLE approach will not work with the STM microcontroller
+**/
+// SENSOR ANALOG_POTS = { SENSOR("analogInput", 102, PA0), SENSOR("analogInput", 103, PA1), SENSOR("analogInput", 103, PB1) };
+// SENSOR IMUS = { SENSOR("ax", 105, 0, PB12), SENSOR("ay", 106, 0, PB14), SENSOR("gx", 105, 0, PB13), SENSOR("gy", 106, 0, PB3) };
+// SENSOR sonar = SENSOR("sonar", 107, PB15, PB5);
 
 void printMessage(uint8_t message) {
   Serial.print("Message: ");
@@ -20,7 +33,7 @@ void printMessage(uint8_t message) {
 }
 
 void setup() {
-  Serial.begin(230400);
+  Serial.begin(115200);
   Wire.begin();
   Serial.println("Initializing bluetooth");
   sensor.initialize();
@@ -71,24 +84,23 @@ void loop() {
     }
 
     for (SENSOR& IMU : IMUS) {
-      const bool isSensorActive = digitalRead(IMU._intPin);
-      if (isSensorActive) {
+      if (IMU.isActive()) {
         int16_t rawValue = IMU.getRawValue(sensor);
-        int16_t normalizedRawValue = constrain(rawValue, 0, 32767);
-        IMU.dataBuffer += normalizedRawValue;
+        int16_t normalizedRawValue = constrain(rawValue, 0, 15500);
+        IMU.setDataBuffer(rawValue);
         if (IMU.measuresCounter % IMU_MAX_NUMBER_OF_MEASURES == 0) {
           IMU.setPreviousValue(IMU.currentValue);
           const int16_t averageValue = IMU.runNonBlockingAverageFilter(IMU_MAX_NUMBER_OF_MEASURES);
-          const uint8_t sensorMappedValue = constrain(map(averageValue, 100, 15500, 0, 127), 0, 127);
+          const uint8_t sensorMappedValue = constrain(map(averageValue, 100, 16000, 0, 127), 0, 127);
           IMU.setCurrentValue(sensorMappedValue);
           std::vector< uint8_t > messages = IMU.getValuesBetweenRanges();
           for (uint8_t message : messages) {
             IMU.sendMidiMessage(BLEMidiServer, "controlChange", message);
           }
-          IMU.measuresCounter = 0;
-          IMU.dataBuffer = 0;
+          IMU.setMeasuresCounter(0);
+          IMU.setDataBuffer(0);
         }
-        IMU.measuresCounter += 1;
+        IMU.setMeasuresCounter(1);
       }
     }
     delayMicroseconds(500);
