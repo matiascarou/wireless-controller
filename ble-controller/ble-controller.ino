@@ -22,14 +22,19 @@ SENSOR sonar = SENSOR("sonar", 107, 13);
 * Comment out lines below for STM32 + Xbees support
 * BLE approach will not work with the STM microcontroller
 **/
-// SENSOR ANALOG_POTS = { SENSOR("analogInput", 102, PA0), SENSOR("analogInput", 103, PA1), SENSOR("analogInput", 103, PB1) };
-// SENSOR IMUS = { SENSOR("ax", 105, 0, PB12), SENSOR("ay", 106, 0, PB14), SENSOR("gx", 105, 0, PB13), SENSOR("gy", 106, 0, PB3) };
-// SENSOR sonar = SENSOR("sonar", 107, PB15, PB5);
+// ANALOG_POTS = { SENSOR("analogInput", 102, PA0), SENSOR("analogInput", 103, PA1), SENSOR("analogInput", 103, PB1) };
+// IMUS = { SENSOR("ax", 105, 0, PB12), SENSOR("ay", 106, 0, PB14), SENSOR("gx", 105, 0, PB13), SENSOR("gy", 106, 0, PB3) };
+// sonar = SENSOR("sonar", 107, PB15, PB5);
 
 void printMessage(uint8_t message) {
   Serial.print("Message: ");
   Serial.print(message);
   Serial.print("\n");
+}
+
+void printTotalLoopRuntime(unsigned long current, unsigned long previous) {
+  Serial.print("Loop total time: ");
+  Serial.println(current - previous);
 }
 
 void setup() {
@@ -64,7 +69,7 @@ void setup() {
 unsigned long previousTime = 0;
 unsigned long currentTime = 0;
 
-const uint8_t IMU_MAX_NUMBER_OF_MEASURES = 10;
+const uint8_t IMU_MAX_NUMBER_OF_MEASURES = 40;
 const uint8_t SONAR_MAX_NUMBER_OF_MEASURES = 3;
 
 void loop() {
@@ -87,15 +92,14 @@ void loop() {
       if (IMU.isActive()) {
         int16_t rawValue = IMU.getRawValue(sensor);
         int16_t normalizedRawValue = constrain(rawValue, 0, 15500);
-        IMU.setDataBuffer(rawValue);
+        IMU.setDataBuffer(normalizedRawValue);
         if (IMU.measuresCounter % IMU_MAX_NUMBER_OF_MEASURES == 0) {
-          IMU.setPreviousValue(IMU.currentValue);
           const int16_t averageValue = IMU.runNonBlockingAverageFilter(IMU_MAX_NUMBER_OF_MEASURES);
-          const uint8_t sensorMappedValue = constrain(map(averageValue, 100, 16000, 0, 127), 0, 127);
+          const uint8_t sensorMappedValue = IMU.getMappedMidiValue(averageValue, 100, 15500);
+          IMU.setPreviousValue(IMU.currentValue);
           IMU.setCurrentValue(sensorMappedValue);
-          std::vector< uint8_t > messages = IMU.getValuesBetweenRanges();
-          for (uint8_t message : messages) {
-            IMU.sendMidiMessage(BLEMidiServer, "controlChange", message);
+          if (IMU.currentValue != IMU.previousValue) {
+            IMU.sendMidiMessage(BLEMidiServer, "controlChange", IMU.currentValue);
           }
           IMU.setMeasuresCounter(0);
           IMU.setDataBuffer(0);
@@ -104,8 +108,24 @@ void loop() {
       }
     }
     delayMicroseconds(500);
+    // printTotalLoopRuntime(currentTime, previousTime);
   }
 }
+
+// std::vector< uint8_t > messages = IMU.getValuesBetweenRanges();
+// const auto vectorSize = messages.size();
+// if (vectorSize > 0) {
+//   const auto firstItemInVector = messages.front();
+//   const auto lastItemInVector = messages.back();
+//   Serial.print("Vector first item: ");
+//   Serial.print(firstItemInVector);
+//   Serial.print("\t");
+//   Serial.print("Vector last item: ");
+//   Serial.println(lastItemInVector);
+// }
+// for (uint8_t message : messages) {
+//   IMU.sendMidiMessage(BLEMidiServer, "controlChange", message);
+// }
 
 // const auto sonarRawValue = sonar.getRawValue(sensor);
 // sonar.dataBuffer += sonarRawValue;

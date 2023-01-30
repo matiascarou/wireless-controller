@@ -114,7 +114,10 @@ int16_t SENSOR::runExponentialFilter(int measureSize, MPU6050 sensor, float alph
 // }
 
 std::vector< uint8_t > SENSOR::getValuesBetweenRanges(uint8_t gap) {
-  uint8_t samples = currentValue - previousValue;
+  uint8_t samples = 1;
+  if (currentValue > previousValue) {
+    samples = currentValue - previousValue;
+  }
   if (currentValue < previousValue) {
     samples = previousValue - currentValue;
   }
@@ -137,7 +140,14 @@ std::vector< uint8_t > SENSOR::getValuesBetweenRanges(uint8_t gap) {
   //   return steps;
   // } else {
   std::generate(steps.begin(), steps.end(), [&startValue, this, &gap]() {
-    return this->currentValue > this->previousValue ? startValue += gap : startValue -= gap;
+    if (this->currentValue > this->previousValue) {
+      return startValue += gap;
+    }
+    if (this->currentValue < this->previousValue) {
+      return startValue -= gap;
+    }
+    return startValue;
+    // return this->currentValue > this->previousValue ? startValue += gap : startValue -= gap;
   });
   // }
   return steps;

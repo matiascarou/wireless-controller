@@ -36,7 +36,6 @@ public:
     _channel = channel;
   }
 
-
   void sendMidiMessage(BLEMidiServerClass serverInstance, char messageType[], uint8_t value, const char mode[] = "BLE") {
     if (strcmp(mode, "BLE") == 0) {
       if (strcmp(messageType, "controlChange") == 0) {
