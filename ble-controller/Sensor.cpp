@@ -1,7 +1,20 @@
 #include "Sensor.h"
 #include "MPU6050.h"
 
-SENSOR::SENSOR(const std::string sensorType, const uint8_t controllerNumber, uint8_t pin, uint8_t intPin) {
+
+uint8_t Sensor::getThreshold() {
+  return this->_sensorType == "analogInput" ? 15 : 45;
+}
+
+uint8_t Sensor::getFloor() {
+  return this->_sensorType == "analogInput" ? 20 : 100;
+}
+
+int16_t Sensor::getCeil() {
+  return this->_sensorType == "analogInput" ? 1023 : 15500;
+}
+
+Sensor::Sensor(const std::string sensorType, const uint8_t controllerNumber, uint8_t pin, uint8_t intPin) {
   _pin = pin;
   _controllerNumber = char(controllerNumber);
   _channel = char(0);
@@ -13,21 +26,32 @@ SENSOR::SENSOR(const std::string sensorType, const uint8_t controllerNumber, uin
   measuresCounter = 0;
   filteredExponentialValue = 0;
   _sensorType = sensorType;
+  _floor = Sensor::getFloor();
+  _ceil = Sensor::getCeil();
+  _threshold = Sensor::getThreshold();
 }
 
-bool SENSOR::isActive() {
-  return !!digitalRead(this->_intPin);
+bool Sensor::isActive() {
+  return this->_intPin ? !!digitalRead(this->_intPin) : true;
 };
 
-void SENSOR::setCurrentValue(uint8_t value) {
+bool Sensor::isAboveThreshold() {
+  return this->measuresCounter % _threshold == 0;
+};
+
+void Sensor::setCurrentValue(uint8_t value) {
   this->currentValue = value;
 }
 
-void SENSOR::setPreviousValue(uint8_t value) {
+void Sensor::setThreshold(uint8_t value) {
+  this->_threshold = value;
+}
+
+void Sensor::setPreviousValue(uint8_t value) {
   this->previousValue = value;
 }
 
-void SENSOR::setMeasuresCounter(uint8_t value) {
+void Sensor::setMeasuresCounter(uint8_t value) {
   if (value == 0) {
     this->measuresCounter = value;
   } else {
@@ -35,7 +59,7 @@ void SENSOR::setMeasuresCounter(uint8_t value) {
   }
 }
 
-void SENSOR::setDataBuffer(int16_t value) {
+void Sensor::setDataBuffer(int16_t value) {
   if (value == 0) {
     this->dataBuffer = value;
   } else {
@@ -43,7 +67,7 @@ void SENSOR::setDataBuffer(int16_t value) {
   }
 }
 
-int16_t SENSOR::getRawValue(MPU6050 sensor) {
+int16_t Sensor::getRawValue(MPU6050 sensor) {
 
   if (_sensorType == "analogInput") {
     return analogRead(_pin);
@@ -56,33 +80,39 @@ int16_t SENSOR::getRawValue(MPU6050 sensor) {
   }
 
   if (_sensorType == "ax") {
-    return sensor.getAccelerationX();
+    const int16_t rawValue = sensor.getAccelerationX();
+    return constrain(rawValue, 0, 15500);
   }
 
   if (_sensorType == "ay") {
-    return sensor.getAccelerationY();
+    const int16_t rawValue = sensor.getAccelerationY();
+    return constrain(rawValue, 0, 15500);
   }
 
   if (_sensorType == "az") {
-    return sensor.getAccelerationZ();
+    const int16_t rawValue = sensor.getAccelerationZ();
+    return constrain(rawValue, 0, 15500);
   }
 
   if (_sensorType == "gx") {
-    return sensor.getRotationX();
+    const int16_t rawValue = sensor.getRotationX();
+    return constrain(rawValue, 0, 15500);
   }
 
   if (_sensorType == "gy") {
-    return sensor.getRotationY();
+    const int16_t rawValue = sensor.getRotationY();
+    return constrain(rawValue, 0, 15500);
   }
 
   if (_sensorType == "gz") {
-    return sensor.getRotationZ();
+    const int16_t rawValue = sensor.getRotationZ();
+    return constrain(rawValue, 0, 15500);
   }
 
   return 0;
 }
 
-int16_t SENSOR::runBlockingAverageFilter(int measureSize, MPU6050 sensor, int gap) {
+int16_t Sensor::runBlockingAverageFilter(int measureSize, MPU6050 sensor, int gap) {
   int buffer = 0;
   for (int i = 0; i < measureSize; i++) {
     int16_t value = this->getRawValue(sensor);
@@ -96,24 +126,17 @@ int16_t SENSOR::runBlockingAverageFilter(int measureSize, MPU6050 sensor, int ga
   return result;
 }
 
-int16_t SENSOR::runNonBlockingAverageFilter(int measureSize) {
-  return this->dataBuffer / measureSize;
+int16_t Sensor::runNonBlockingAverageFilter() {
+  return this->dataBuffer / _threshold;
 }
 
-int16_t SENSOR::runExponentialFilter(int measureSize, MPU6050 sensor, float alpha) {
+int16_t Sensor::runExponentialFilter(int measureSize, MPU6050 sensor, float alpha) {
   const int16_t rawValue = this->getRawValue(sensor);
   this->filteredExponentialValue = (alpha * rawValue) + (1 - alpha) * this->filteredExponentialValue;
   return this->filteredExponentialValue;
 }
 
-// int SENSOR::runKalmanFilter(Kalman kalmanFilterInstance) {
-//   const int16_t rawValue = this->getRawValue(sensor);
-//   const float filteredFloatValue = kalman.filter(sensorValue);
-//   const int filteredIntValue = int(filteredFloatValue);
-//   return filteredIntValue
-// }
-
-std::vector< uint8_t > SENSOR::getValuesBetweenRanges(uint8_t gap) {
+std::vector< uint8_t > Sensor::getValuesBetweenRanges(uint8_t gap) {
   uint8_t samples = 1;
   if (currentValue > previousValue) {
     samples = currentValue - previousValue;
@@ -123,22 +146,6 @@ std::vector< uint8_t > SENSOR::getValuesBetweenRanges(uint8_t gap) {
   }
   std::vector< uint8_t > steps(samples / gap);
   uint8_t startValue = previousValue;
-  // uint8_t increment = currentValue > previousValue ? gap : -gap;
-  // if (gap > 1) {
-  //   std::generate(steps.begin(), steps.end(), [startValue, increment]() mutable {
-  //     uint8_t value = startValue;
-  //     startValue += increment;
-  //     // TODO: Make this better
-  //     if (value >= 124) {
-  //       return (uint8_t)127;
-  //     }
-  //     if (value <= 2) {
-  //       return (uint8_t)0;
-  //     }
-  //     return value;
-  //   });
-  //   return steps;
-  // } else {
   std::generate(steps.begin(), steps.end(), [&startValue, this, &gap]() {
     if (this->currentValue > this->previousValue) {
       return startValue += gap;
@@ -147,12 +154,59 @@ std::vector< uint8_t > SENSOR::getValuesBetweenRanges(uint8_t gap) {
       return startValue -= gap;
     }
     return startValue;
-    // return this->currentValue > this->previousValue ? startValue += gap : startValue -= gap;
   });
-  // }
   return steps;
 }
 
-uint8_t SENSOR::getMappedMidiValue(int16_t actualValue, int floor, int ceil) {
-  return constrain(map(actualValue, floor, ceil, 0, 127), 0, 127);
+uint8_t Sensor::getMappedMidiValue(int16_t actualValue, int floor, int ceil) {
+  if (floor && ceil) {
+    return constrain(map(actualValue, floor, ceil, 0, 127), 0, 127);
+  }
+  return constrain(map(actualValue, _floor, _ceil, 0, 127), 0, 127);
 }
+
+// int Sensor::runKalmanFilter(Kalman kalmanFilterInstance) {
+//   const int16_t rawValue = this->getRawValue(sensor);
+//   const float filteredFloatValue = kalman.filter(sensorValue);
+//   const int filteredIntValue = int(filteredFloatValue);
+//   return filteredIntValue
+// }
+
+// std::vector< uint8_t > Sensor::getValuesBetweenRanges(uint8_t gap) {
+//   uint8_t samples = 1;
+//   if (currentValue > previousValue) {
+//     samples = currentValue - previousValue;
+//   }
+//   if (currentValue < previousValue) {
+//     samples = previousValue - currentValue;
+//   }
+//   std::vector< uint8_t > steps(samples / gap);
+//   uint8_t startValue = previousValue;
+//   uint8_t increment = currentValue > previousValue ? gap : -gap;
+//   if (gap > 1) {
+//     std::generate(steps.begin(), steps.end(), [startValue, increment]() mutable {
+//       uint8_t value = startValue;
+//       startValue += increment;
+//       // TODO: Make this better
+//       if (value >= 124) {
+//         return (uint8_t)127;
+//       }
+//       if (value <= 2) {
+//         return (uint8_t)0;
+//       }
+//       return value;
+//     });
+//     return steps;
+//   } else {
+//     std::generate(steps.begin(), steps.end(), [&startValue, this, &gap]() {
+//       if (this->currentValue > this->previousValue) {
+//         return startValue += gap;
+//       }
+//       if (this->currentValue < this->previousValue) {
+//         return startValue -= gap;
+//       }
+//       return startValue;
+//     });
+//     return steps;
+//   }
+// }
