@@ -1,17 +1,97 @@
 #include "Sensor.h"
 #include "MPU6050.h"
 
+// struct Value {
+//   int16_t floor;
+//   int16_t ceil;
+//   int16_t threshold;
+// };
 
-uint8_t Sensor::getThreshold() {
-  return this->_sensorType == "analogInput" ? 15 : 45;
+// static std::map<std::string, Value> values = {
+//   { "analogInput", { 20, 1023, 30 } },
+//   { "force", { 20, 1023, 20 } },
+//   { "sonar", { 6, 30, 40 } },
+//   { "ax", { 100, 15500, 50 } },
+//   { "ay", { 100, 15500, 50 } },
+//   { "gx", { 100, 15500, 50 } },
+//   { "gy", { 100, 15500, 50 } },
+// };
+
+// static std::map<std::string, int16_t> thresholdValues = {
+//   { "analogInput", 30 },
+//   { "force", 20 },
+//   { "sonar", 40 },
+//   { "ax", 50 },
+//   { "ay", 50 },
+//   { "gx", 50 },
+//   { "gy", 50 },
+// };
+
+// static std::map<std::string, int16_t> floorValues = {
+//   { "analogInput", 20 },
+//   { "force", 20 },
+//   { "sonar", 6 },
+//   { "ax", 100 },
+//   { "ay", 100 },
+//   { "gx", 100 },
+//   { "gy", 100 },
+// };
+
+// static std::map<std::string, int16_t> ceilValues = {
+//   { "analogInput", 1023 },
+//   { "force", 1023 },
+//   { "sonar", 30 },
+//   { "ax", 15500 },
+//   { "ay", 15500 },
+//   { "gx", 15500 },
+//   { "gy", 15500 },
+// };
+
+int16_t Sensor::getValueFromMapObject(std::map<std::string, int16_t> &values) {
+  const std::string sensorType = this->_sensorType;
+  return values[sensorType];
 }
 
-uint8_t Sensor::getFloor() {
-  return this->_sensorType == "analogInput" ? 20 : 100;
+int16_t Sensor::getThreshold() {
+  const std::string sensorType = this->_sensorType;
+  static std::map<std::string, int> thresholdValues = {
+    { "analogInput", 30 },
+    { "force", 20 },
+    { "sonar", 40 },
+    { "ax", 50 },
+    { "ay", 50 },
+    { "gx", 50 },
+    { "gy", 50 },
+  };
+  return thresholdValues[sensorType];
+}
+
+int16_t Sensor::getFloor() {
+  const std::string sensorType = this->_sensorType;
+  static std::map<std::string, int> floorValues = {
+    { "analogInput", 20 },
+    { "force", 20 },
+    { "sonar", 6 },
+    { "ax", 100 },
+    { "ay", 100 },
+    { "gx", 100 },
+    { "gy", 100 },
+  };
+  return floorValues[sensorType];
 }
 
 int16_t Sensor::getCeil() {
-  return this->_sensorType == "analogInput" ? 1023 : 15500;
+  const std::string sensorType = this->_sensorType;
+  static std::map<std::string, int> ceilValues = {
+    { "analogInput", 1023 },
+    { "force", 1023 },
+    { "sonar", 30 },
+    { "ax", 15500 },
+    { "ay", 15500 },
+    { "gx", 15500 },
+    { "gy", 15500 },
+  };
+  return ceilValues[sensorType];
 }
 
 Sensor::Sensor(const std::string sensorType, const uint8_t controllerNumber, uint8_t pin, uint8_t intPin) {
@@ -29,6 +109,9 @@ Sensor::Sensor(const std::string sensorType, const uint8_t controllerNumber, uin
   _floor = Sensor::getFloor();
   _ceil = Sensor::getCeil();
   _threshold = Sensor::getThreshold();
+  // _floor = Sensor::getValueFromMapObject(floorValues);
+  // _ceil = Sensor::getValueFromMapObject(ceilValues);
+  // _threshold = Sensor::getValueFromMapObject(thresholdValues);
 }
 
 bool Sensor::isActive() {

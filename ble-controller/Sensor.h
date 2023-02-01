@@ -10,15 +10,16 @@ private:
   char _controllerNumber;
   char _channel;
   char _statusCode;
-  uint8_t _floor;
-  uint8_t _threshold;
+  int16_t _floor;
+  int16_t _threshold;
   int16_t _ceil;
   unsigned long dataBuffer;
   uint8_t measuresCounter;
   std::string _sensorType;
-  uint8_t getFloor();
-  uint8_t getThreshold();
+  int16_t getFloor();
+  int16_t getThreshold();
   int16_t getCeil();
+  int16_t getValueFromMapObject(std::map<std::string, int16_t> &values);
 public:
   Sensor(const std::string sensorType, const uint8_t controllerNumber, const uint8_t pin = 0, const uint8_t intPin = 0);
   uint8_t _pin;
@@ -55,6 +56,31 @@ public:
       Serial.write(_controllerNumber);
       Serial.write(char(value));
     }
+  }
+
+  static std::vector<Sensor> initializeSensors() {
+    std::vector<Sensor> SENSORS = {
+      Sensor("analogInput", 102, A0),
+      Sensor("analogInput", 103, A3),
+      Sensor("ax", 105, 0, 18),
+      Sensor("ay", 106, 0, 19)
+    };
+    return SENSORS;
+    /**
+    * Comment out lines below for STM32 + Xbees support
+    * BLE approach will not work with the STM microcontroller
+    **/
+    //   std::vector<Sensor> SENSORS = {
+    //     Sensor("analogInput", 102, PA0),
+    //     Sensor("analogInput", 103, PA1),
+    //     Sensor("analogInput", 103, PA1),
+    //     Sensor("ax", 105, 0, PB12),
+    //     Sensor("ay", 106, 0, PB14),
+    //     Sensor("gx", 105, 0, PB13),
+    //     Sensor("gy", 106, 0, PB3),
+    //     Sensor("sonar", 107, PB15, PB5)
+    //   };
+    //   return SENSORS;
   }
 };
 
