@@ -1,7 +1,6 @@
 #include "Sensor.h"
 #include "MPU6050.h"
 #include <BLEMidi.h>
-#include <map>
 
 // struct Value {
 //   int16_t floor;
@@ -25,7 +24,7 @@
 
 int16_t Sensor::getFilterThreshold(std::string &type) {
   static std::map<std::string, int> filterThresholdValues = {
-    { "potentiometer", 50 },
+    { "potentiometer", 40 },
     { "force", 5 },
     { "sonar", 40 },
     { "ax", 50 },
@@ -128,7 +127,7 @@ void Sensor::setDataBuffer(int16_t value) {
   }
 }
 
-int16_t Sensor::getRawValue(MPU6050 sensor) {
+int16_t Sensor::getRawValue(MPU6050 &accelgyro) {
 
   if (_sensorType == "potentiometer" || _sensorType == "force") {
     return analogRead(_pin);
@@ -141,42 +140,42 @@ int16_t Sensor::getRawValue(MPU6050 sensor) {
   }
 
   if (_sensorType == "ax") {
-    const int16_t rawValue = sensor.getAccelerationX();
+    const int16_t rawValue = accelgyro.getAccelerationX();
     return constrain(rawValue, 0, 15500);
   }
 
   if (_sensorType == "ay") {
-    const int16_t rawValue = sensor.getAccelerationY();
+    const int16_t rawValue = accelgyro.getAccelerationY();
     return constrain(rawValue, 0, 15500);
   }
 
   if (_sensorType == "az") {
-    const int16_t rawValue = sensor.getAccelerationZ();
+    const int16_t rawValue = accelgyro.getAccelerationZ();
     return constrain(rawValue, 0, 15500);
   }
 
   if (_sensorType == "gx") {
-    const int16_t rawValue = sensor.getRotationX();
+    const int16_t rawValue = accelgyro.getRotationX();
     return constrain(rawValue, 0, 15500);
   }
 
   if (_sensorType == "gy") {
-    const int16_t rawValue = sensor.getRotationY();
+    const int16_t rawValue = accelgyro.getRotationY();
     return constrain(rawValue, 0, 15500);
   }
 
   if (_sensorType == "gz") {
-    const int16_t rawValue = sensor.getRotationZ();
+    const int16_t rawValue = accelgyro.getRotationZ();
     return constrain(rawValue, 0, 15500);
   }
 
   return 0;
 }
 
-int16_t Sensor::runBlockingAverageFilter(int measureSize, MPU6050 sensor, int gap) {
+int16_t Sensor::runBlockingAverageFilter(int measureSize, MPU6050 &accelgyro, int gap) {
   int buffer = 0;
   for (int i = 0; i < measureSize; i++) {
-    int16_t value = this->getRawValue(sensor);
+    int16_t value = this->getRawValue(accelgyro);
     if (value < 0) {
       value = 0;
     }
@@ -191,8 +190,8 @@ int16_t Sensor::runNonBlockingAverageFilter() {
   return this->dataBuffer / _threshold;
 }
 
-int16_t Sensor::runExponentialFilter(int measureSize, MPU6050 sensor, float alpha) {
-  const int16_t rawValue = this->getRawValue(sensor);
+int16_t Sensor::runExponentialFilter(int measureSize, MPU6050 &accelgyro, float alpha) {
+  const int16_t rawValue = this->getRawValue(accelgyro);
   this->filteredExponentialValue = (alpha * rawValue) + (1 - alpha) * this->filteredExponentialValue;
   return this->filteredExponentialValue;
 }
@@ -226,7 +225,7 @@ uint8_t Sensor::getMappedMidiValue(int16_t actualValue, int floor, int ceil) {
   return constrain(map(actualValue, _floor, _ceil, 0, 127), 0, 127);
 }
 
-void Sensor::sendMidiMessage(BLEMidiServerClass serverInstance, char messageType[], uint8_t value, const char mode[]) {
+void Sensor::sendMidiMessage(BLEMidiServerClass &serverInstance, char messageType[], uint8_t value, const char mode[]) {
   if (strcmp(mode, "BLE") == 0) {
     if (_midiMessage == "controlChange") {
       serverInstance.controlChange(_channel, _controllerNumber, char(value));
@@ -250,7 +249,7 @@ void Sensor::sendMidiMessage(BLEMidiServerClass serverInstance, char messageType
 }
 
 // int Sensor::runKalmanFilter(Kalman kalmanFilterInstance) {
-//   const int16_t rawValue = this->getRawValue(sensor);
+//   const int16_t rawValue = this->getRawValue(accelgyro);
 //   const float filteredFloatValue = kalman.filter(sensorValue);
 //   const int filteredIntValue = int(filteredFloatValue);
 //   return filteredIntValue

@@ -30,11 +30,11 @@ public:
   int16_t filteredValue;
   bool isSwitchActive();
   bool isAboveThreshold();
-  int16_t getRawValue(MPU6050 sensor);
+  int16_t getRawValue(MPU6050 &accelgyro);
   uint8_t getMappedMidiValue(int16_t actualValue, int floor = 0, int ceil = 0);
-  int16_t runBlockingAverageFilter(int measureSize, MPU6050 sensor, int gap = 1);
+  int16_t runBlockingAverageFilter(int measureSize, MPU6050 &accelgyro, int gap = 1);
   int16_t runNonBlockingAverageFilter();
-  int16_t runExponentialFilter(int measureSize, MPU6050 sensor, float alpha = 0.2);
+  int16_t runExponentialFilter(int measureSize, MPU6050 &accelgyro, float alpha = 0.2);
   std::vector< uint8_t > getValuesBetweenRanges(uint8_t gap = 1);
   void setCurrentValue(uint8_t value);
   void setPreviousValue(uint8_t value);
@@ -42,7 +42,7 @@ public:
   void setDataBuffer(int16_t value);
   void setThreshold(uint8_t value);
   void setMidiMessage(std::string value);
-  void sendMidiMessage(BLEMidiServerClass serverInstance, char messageType[], uint8_t value, const char mode[] = "BLE");
+  void sendMidiMessage(BLEMidiServerClass &serverInstance, char messageType[], uint8_t value, const char mode[] = "BLE");
   void setMidiChannel(uint8_t channel);
 
   static std::vector<Sensor> initializeSensors() {

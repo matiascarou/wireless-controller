@@ -36,19 +36,10 @@ void setup() {
 
   Sensor::setUpSensorPins(SENSORS);
 
-  // for (Sensor SENSOR : SENSORS) {
-  //   if (!!SENSOR._pin) {
-  //     pinMode(SENSOR._pin, INPUT);
-  //   }
-  //   if (!!SENSOR._intPin) {
-  //     pinMode(SENSOR._intPin, INPUT);
-  //   }
-  // }
-
-
   BLEMidiServer.begin("Le tuts controller");
 
-  Serial.println("Sensors ready ʕノ•ᴥ•ʔノ");
+  // Serial.println("Sensors ready ʕノ•ᴥ•ʔノ");
+  Serial.println("Sensors ready (:");
 }
 
 unsigned long previousTime = 0;
