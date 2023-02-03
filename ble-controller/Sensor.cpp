@@ -1,5 +1,7 @@
 #include "Sensor.h"
 #include "MPU6050.h"
+#include <BLEMidi.h>
+#include <map>
 
 // struct Value {
 //   int16_t floor;
@@ -8,7 +10,7 @@
 // };
 
 // static std::map<std::string, Value> values = {
-//   { "analogInput", { 20, 1023, 30 } },
+//   { "potentiometer", { 20, 1023, 30 } },
 //   { "force", { 20, 1023, 20 } },
 //   { "sonar", { 6, 30, 40 } },
 //   { "ax", { 100, 15500, 50 } },
@@ -17,73 +19,39 @@
 //   { "gy", { 100, 15500, 50 } },
 // };
 
-// static std::map<std::string, int16_t> thresholdValues = {
-//   { "analogInput", 30 },
-//   { "force", 20 },
-//   { "sonar", 40 },
-//   { "ax", 50 },
-//   { "ay", 50 },
-//   { "gx", 50 },
-//   { "gy", 50 },
-// };
+// int16_t getValueFromMapObject(std::map<std::string, Value> mapObject, std::string &type) {
 
-// static std::map<std::string, int16_t> floorValues = {
-//   { "analogInput", 20 },
-//   { "force", 20 },
-//   { "sonar", 6 },
-//   { "ax", 100 },
-//   { "ay", 100 },
-//   { "gx", 100 },
-//   { "gy", 100 },
-// };
+// }
 
-// static std::map<std::string, int16_t> ceilValues = {
-//   { "analogInput", 1023 },
-//   { "force", 1023 },
-//   { "sonar", 30 },
-//   { "ax", 15500 },
-//   { "ay", 15500 },
-//   { "gx", 15500 },
-//   { "gy", 15500 },
-// };
-
-int16_t Sensor::getValueFromMapObject(std::map<std::string, int16_t> &values) {
-  const std::string sensorType = this->_sensorType;
-  return values[sensorType];
-}
-
-int16_t Sensor::getThreshold() {
-  const std::string sensorType = this->_sensorType;
-  static std::map<std::string, int> thresholdValues = {
-    { "analogInput", 30 },
-    { "force", 20 },
+int16_t Sensor::getFilterThreshold(std::string &type) {
+  static std::map<std::string, int> filterThresholdValues = {
+    { "potentiometer", 50 },
+    { "force", 5 },
     { "sonar", 40 },
     { "ax", 50 },
     { "ay", 50 },
     { "gx", 50 },
     { "gy", 50 },
   };
-  return thresholdValues[sensorType];
+  return filterThresholdValues[type];
 }
 
-int16_t Sensor::getFloor() {
-  const std::string sensorType = this->_sensorType;
+int16_t Sensor::getFloor(std::string &type) {
   static std::map<std::string, int> floorValues = {
-    { "analogInput", 20 },
-    { "force", 20 },
+    { "potentiometer", 20 },
+    { "force", 60 },
     { "sonar", 6 },
     { "ax", 100 },
     { "ay", 100 },
     { "gx", 100 },
     { "gy", 100 },
   };
-  return floorValues[sensorType];
+  return floorValues[type];
 }
 
-int16_t Sensor::getCeil() {
-  const std::string sensorType = this->_sensorType;
+int16_t Sensor::getCeil(std::string &type) {
   static std::map<std::string, int> ceilValues = {
-    { "analogInput", 1023 },
+    { "potentiometer", 1023 },
     { "force", 1023 },
     { "sonar", 30 },
     { "ax", 15500 },
@@ -91,7 +59,7 @@ int16_t Sensor::getCeil() {
     { "gx", 15500 },
     { "gy", 15500 },
   };
-  return ceilValues[sensorType];
+  return ceilValues[type];
 }
 
 Sensor::Sensor(const std::string sensorType, const uint8_t controllerNumber, uint8_t pin, uint8_t intPin) {
@@ -100,21 +68,23 @@ Sensor::Sensor(const std::string sensorType, const uint8_t controllerNumber, uin
   _channel = char(0);
   _statusCode = char(176);
   _intPin = intPin;
+  _midiMessage = sensorType != "force" ? "controlChange" : "gate";
+  _sensorType = sensorType;
   previousValue = 0;
   currentValue = 0;
   dataBuffer = 0;
   measuresCounter = 0;
   filteredExponentialValue = 0;
-  _sensorType = sensorType;
-  _floor = Sensor::getFloor();
-  _ceil = Sensor::getCeil();
-  _threshold = Sensor::getThreshold();
-  // _floor = Sensor::getValueFromMapObject(floorValues);
-  // _ceil = Sensor::getValueFromMapObject(ceilValues);
-  // _threshold = Sensor::getValueFromMapObject(thresholdValues);
+  _floor = Sensor::getFloor(_sensorType);
+  _ceil = Sensor::getCeil(_sensorType);
+  _threshold = Sensor::getFilterThreshold(_sensorType);
+  // _floor = getValueFromMapObject(floorValues, _sensorType);
+  // _ceil = getValueFromMapObject(ceilValues, _sensorType);
+  // _threshold = getValueFromMapObject(thresholdValues, _sensorType);
+  isActive = false;
 }
 
-bool Sensor::isActive() {
+bool Sensor::isSwitchActive() {
   return this->_intPin ? !!digitalRead(this->_intPin) : true;
 };
 
@@ -130,8 +100,16 @@ void Sensor::setThreshold(uint8_t value) {
   this->_threshold = value;
 }
 
+void Sensor::setMidiMessage(std::string value) {
+  this->_midiMessage = value;
+}
+
 void Sensor::setPreviousValue(uint8_t value) {
   this->previousValue = value;
+}
+
+void Sensor::setMidiChannel(uint8_t channel) {
+  this->_channel = channel;
 }
 
 void Sensor::setMeasuresCounter(uint8_t value) {
@@ -152,7 +130,7 @@ void Sensor::setDataBuffer(int16_t value) {
 
 int16_t Sensor::getRawValue(MPU6050 sensor) {
 
-  if (_sensorType == "analogInput") {
+  if (_sensorType == "potentiometer" || _sensorType == "force") {
     return analogRead(_pin);
   }
 
@@ -246,6 +224,29 @@ uint8_t Sensor::getMappedMidiValue(int16_t actualValue, int floor, int ceil) {
     return constrain(map(actualValue, floor, ceil, 0, 127), 0, 127);
   }
   return constrain(map(actualValue, _floor, _ceil, 0, 127), 0, 127);
+}
+
+void Sensor::sendMidiMessage(BLEMidiServerClass serverInstance, char messageType[], uint8_t value, const char mode[]) {
+  if (strcmp(mode, "BLE") == 0) {
+    if (_midiMessage == "controlChange") {
+      serverInstance.controlChange(_channel, _controllerNumber, char(value));
+    }
+    if (_midiMessage == "gate") {
+      if (!!value && !this->isActive) {
+        serverInstance.noteOn(_channel, char(60), char(127));
+        this->isActive = true;
+      }
+      if (!value && this->isActive) {
+        serverInstance.noteOff(_channel, char(60), char(127));
+        this->isActive = false;
+      }
+    }
+  }
+  if (strcmp(mode, "Serial") == 0) {
+    Serial.write(_statusCode);
+    Serial.write(_controllerNumber);
+    Serial.write(char(value));
+  }
 }
 
 // int Sensor::runKalmanFilter(Kalman kalmanFilterInstance) {

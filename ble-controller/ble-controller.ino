@@ -5,7 +5,7 @@
 #include "Wire.h"
 #include "Sensor.h"
 
-MPU6050 sensor;
+MPU6050 accelgyro;
 
 std::vector<Sensor> SENSORS = Sensor::initializeSensors();
 
@@ -24,9 +24,9 @@ void setup() {
   Serial.begin(115200);
   Wire.begin();
   Serial.println("Initializing bluetooth");
-  sensor.initialize();
+  accelgyro.initialize();
 
-  if (sensor.testConnection()) {
+  if (accelgyro.testConnection()) {
     Serial.println("Succesfully connected to IMU!");
   } else {
     Serial.println("There was a problem with the IMU initialization");
@@ -34,14 +34,16 @@ void setup() {
 
   analogReadResolution(10);
 
-  for (Sensor SENSOR : SENSORS) {
-    if (SENSOR._pin) {
-      pinMode(SENSOR._pin, INPUT);
-    }
-    if (SENSOR._intPin) {
-      pinMode(SENSOR._intPin, INPUT);
-    }
-  }
+  Sensor::setUpSensorPins(SENSORS);
+
+  // for (Sensor SENSOR : SENSORS) {
+  //   if (!!SENSOR._pin) {
+  //     pinMode(SENSOR._pin, INPUT);
+  //   }
+  //   if (!!SENSOR._intPin) {
+  //     pinMode(SENSOR._intPin, INPUT);
+  //   }
+  // }
 
 
   BLEMidiServer.begin("Le tuts controller");
@@ -56,8 +58,8 @@ void loop() {
   currentTime = millis();
   if (BLEMidiServer.isConnected()) {
     for (Sensor& SENSOR : SENSORS) {
-      if (SENSOR.isActive()) {
-        int16_t rawValue = SENSOR.getRawValue(sensor);
+      if (SENSOR.isSwitchActive()) {
+        int16_t rawValue = SENSOR.getRawValue(accelgyro);
         SENSOR.setDataBuffer(rawValue);
         if (SENSOR.isAboveThreshold()) {
           const int16_t averageValue = SENSOR.runNonBlockingAverageFilter();
