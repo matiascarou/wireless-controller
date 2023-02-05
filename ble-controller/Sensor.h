@@ -42,7 +42,9 @@ public:
   void setDataBuffer(int16_t value);
   void setThreshold(uint8_t value);
   void setMidiMessage(std::string value);
-  void sendMidiMessage(BLEMidiServerClass &serverInstance, uint8_t value, const char mode[] = "BLE");
+  void sendMidiMessage(BLEMidiServerClass &serverInstance, const char mode[] = "BLE");
+  void sendBleMidiMessage(BLEMidiServerClass &serverInstance);
+  void sendSerialMidiMessage();
   void setMidiChannel(uint8_t channel);
 
   static void setUpSensorPins(std::vector<Sensor> SENSORS) {

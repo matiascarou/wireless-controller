@@ -5,12 +5,6 @@
 #include "Wire.h"
 #include "Sensor.h"
 
-#define ERROR_LED 2
-
-MPU6050 accelgyro;
-
-std::vector<Sensor> SENSORS = Sensor::initializeSensors();
-
 void printMessage(uint8_t message) {
   Serial.print("Message: ");
   Serial.print(message);
@@ -22,6 +16,15 @@ void printTotalLoopRuntime(unsigned long current, unsigned long& previous) {
   Serial.println(current - previous);
   previous = current;
 }
+
+/**
+* Code starts here
+**/
+#define ERROR_LED 2
+
+MPU6050 accelgyro;
+
+std::vector<Sensor> SENSORS = Sensor::initializeSensors();
 
 void setup() {
   Serial.begin(115200);
@@ -51,8 +54,8 @@ unsigned long previousTime = 0;
 unsigned long currentTime = 0;
 
 void loop() {
-  currentTime = millis();
   if (BLEMidiServer.isConnected()) {
+    currentTime = millis();
     for (Sensor& SENSOR : SENSORS) {
       if (SENSOR.isSwitchActive()) {
         int16_t rawValue = SENSOR.getRawValue(accelgyro);
@@ -63,7 +66,7 @@ void loop() {
           SENSOR.setPreviousValue(SENSOR.currentValue);
           SENSOR.setCurrentValue(sensorMappedValue);
           if (SENSOR.currentValue != SENSOR.previousValue) {
-            SENSOR.sendMidiMessage(BLEMidiServer, SENSOR.currentValue);
+            SENSOR.sendBleMidiMessage(BLEMidiServer);
           }
           SENSOR.setMeasuresCounter(0);
           SENSOR.setDataBuffer(0);
@@ -72,6 +75,6 @@ void loop() {
       }
     }
     delayMicroseconds(200);
-    printTotalLoopRuntime(currentTime, previousTime);
+    // printTotalLoopRuntime(currentTime, previousTime);
   }
 }

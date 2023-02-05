@@ -50,8 +50,8 @@ int16_t Sensor::getFloor(std::string &type) {
 
 int16_t Sensor::getCeil(std::string &type) {
   static std::map<std::string, int> ceilValues = {
-    { "potentiometer", 1023 },
-    { "force", 1023 },
+    { "potentiometer", 1000 },
+    { "force", 1000 },
     { "sonar", 30 },
     { "ax", 15500 },
     { "ay", 15500 },
@@ -225,28 +225,67 @@ uint8_t Sensor::getMappedMidiValue(int16_t actualValue, int floor, int ceil) {
   return constrain(map(actualValue, _floor, _ceil, 0, 127), 0, 127);
 }
 
-void Sensor::sendMidiMessage(BLEMidiServerClass &serverInstance, uint8_t value, const char mode[]) {
-  if (strcmp(mode, "BLE") == 0) {
-    if (_midiMessage == "controlChange") {
-      serverInstance.controlChange(_channel, _controllerNumber, char(value));
+
+void Sensor::sendBleMidiMessage(BLEMidiServerClass &serverInstance) {
+  if (_midiMessage == "controlChange") {
+    serverInstance.controlChange(_channel, _controllerNumber, char(this->currentValue));
+  }
+  if (_midiMessage == "gate") {
+    if (!!this->currentValue && !this->isActive) {
+      serverInstance.noteOn(_channel, char(60), char(127));
+      this->isActive = true;
     }
-    if (_midiMessage == "gate") {
-      if (!!value && !this->isActive) {
-        serverInstance.noteOn(_channel, char(60), char(127));
-        this->isActive = true;
-      }
-      if (!value && this->isActive) {
-        serverInstance.noteOff(_channel, char(60), char(127));
-        this->isActive = false;
-      }
+    if (!this->currentValue && this->isActive) {
+      serverInstance.noteOff(_channel, char(60), char(127));
+      this->isActive = false;
     }
   }
-  if (strcmp(mode, "Serial") == 0) {
+}
+
+void Sensor::sendSerialMidiMessage() {
+  if (_midiMessage == "controlChange") {
     Serial.write(_statusCode);
     Serial.write(_controllerNumber);
-    Serial.write(char(value));
-  }1    
+    Serial.write(char(this->currentValue));
+  }
+  if (_midiMessage == "gate") {
+    if (!!this->currentValue && !this->isActive) {
+      Serial.write(char(144));
+      Serial.write(char(60));
+      Serial.write(char(127));
+      this->isActive = true;
+    }
+    if (!this->currentValue && this->isActive) {
+      Serial.write(char(128));
+      Serial.write(char(60));
+      Serial.write(char(127));
+      this->isActive = false;
+    }
+  }
 }
+
+// void Sensor::sendMidiMessage(BLEMidiServerClass &serverInstance, const char mode[]) {
+//   if (strcmp(mode, "BLE") == 0) {
+//     if (_midiMessage == "controlChange") {
+//       serverInstance.controlChange(_channel, _controllerNumber, char(this->currentValue));
+//     }
+//     if (_midiMessage == "gate") {
+//       if (!!this->currentValue && !this->isActive) {
+//         serverInstance.noteOn(_channel, char(60), char(127));
+//         this->isActive = true;
+//       }
+//       if (!this->currentValue && this->isActive) {
+//         serverInstance.noteOff(_channel, char(60), char(127));
+//         this->isActive = false;
+//       }
+//     }
+//   }
+//   if (strcmp(mode, "Serial") == 0) {
+//     Serial.write(_statusCode);
+//     Serial.write(_controllerNumber);
+//     Serial.write(char(this->currentValue));
+//   }
+// }
 
 // int Sensor::runKalmanFilter(Kalman kalmanFilterInstance) {
 //   const int16_t rawValue = this->getRawValue(accelgyro);
