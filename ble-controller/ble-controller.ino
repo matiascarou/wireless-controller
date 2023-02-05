@@ -5,6 +5,8 @@
 #include "Wire.h"
 #include "Sensor.h"
 
+#define ERROR_LED 2
+
 MPU6050 accelgyro;
 
 std::vector<Sensor> SENSORS = Sensor::initializeSensors();
@@ -15,9 +17,10 @@ void printMessage(uint8_t message) {
   Serial.print("\n");
 }
 
-void printTotalLoopRuntime(unsigned long current, unsigned long previous) {
+void printTotalLoopRuntime(unsigned long current, unsigned long& previous) {
   Serial.print("Loop total time: ");
   Serial.println(current - previous);
+  previous = current;
 }
 
 void setup() {
@@ -25,11 +28,13 @@ void setup() {
   Wire.begin();
   Serial.println("Initializing bluetooth");
   accelgyro.initialize();
+  pinMode(ERROR_LED, OUTPUT);
 
   if (accelgyro.testConnection()) {
     Serial.println("Succesfully connected to IMU!");
   } else {
     Serial.println("There was a problem with the IMU initialization");
+    digitalWrite(ERROR_LED, HIGH);
   }
 
   analogReadResolution(10);
@@ -68,6 +73,5 @@ void loop() {
     }
     delayMicroseconds(500);
     printTotalLoopRuntime(currentTime, previousTime);
-    previousTime = currentTime;
   }
 }

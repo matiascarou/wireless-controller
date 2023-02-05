@@ -45,6 +45,17 @@ public:
   void sendMidiMessage(BLEMidiServerClass &serverInstance, char messageType[], uint8_t value, const char mode[] = "BLE");
   void setMidiChannel(uint8_t channel);
 
+  static void setUpSensorPins(std::vector<Sensor> SENSORS) {
+    for (Sensor SENSOR : SENSORS) {
+      if (!!SENSOR._pin) {
+        pinMode(SENSOR._pin, INPUT);
+      }
+      if (!!SENSOR._intPin) {
+        pinMode(SENSOR._intPin, INPUT);
+      }
+    }
+  }
+
   static std::vector<Sensor> initializeSensors() {
     std::vector<Sensor> SENSORS = {
       Sensor("potentiometer", 102, A0),
@@ -69,17 +80,6 @@ public:
     //     Sensor("sonar", 107, PB15, PB5)
     //   };
     //   return SENSORS;
-  }
-
-  static void setUpSensorPins(std::vector<Sensor> SENSORS) {
-    for (Sensor SENSOR : SENSORS) {
-      if (!!SENSOR._pin) {
-        pinMode(SENSOR._pin, INPUT);
-      }
-      if (!!SENSOR._intPin) {
-        pinMode(SENSOR._intPin, INPUT);
-      }
-    }
   }
 };
 
