@@ -22,7 +22,7 @@ private:
   int16_t getFilterThreshold(std::string &type);
   int16_t getCeil(std::string &type);
 public:
-  Sensor(const std::string sensorType, const uint8_t controllerNumber, const uint8_t pin = 0, const uint8_t intPin = 0);
+  Sensor(const std::string &sensorType, const uint8_t &controllerNumber, const uint8_t &pin = 0, const uint8_t &intPin = 0);
   uint8_t _pin;
   uint8_t _intPin;
   uint8_t previousValue;
@@ -42,7 +42,7 @@ public:
   void setDataBuffer(int16_t value);
   void setThreshold(uint8_t value);
   void setMidiMessage(std::string value);
-  void sendMidiMessage(BLEMidiServerClass &serverInstance, char messageType[], uint8_t value, const char mode[] = "BLE");
+  void sendMidiMessage(BLEMidiServerClass &serverInstance, uint8_t value, const char mode[] = "BLE");
   void setMidiChannel(uint8_t channel);
 
   static void setUpSensorPins(std::vector<Sensor> SENSORS) {
@@ -57,7 +57,7 @@ public:
   }
 
   static std::vector<Sensor> initializeSensors() {
-    std::vector<Sensor> SENSORS = {
+    const static std::vector<Sensor> SENSORS = {
       Sensor("potentiometer", 102, A0),
       Sensor("potentiometer", 103, A3),
       Sensor("force", 104, A6),

@@ -63,7 +63,7 @@ void loop() {
           SENSOR.setPreviousValue(SENSOR.currentValue);
           SENSOR.setCurrentValue(sensorMappedValue);
           if (SENSOR.currentValue != SENSOR.previousValue) {
-            SENSOR.sendMidiMessage(BLEMidiServer, "controlChange", SENSOR.currentValue);
+            SENSOR.sendMidiMessage(BLEMidiServer, SENSOR.currentValue);
           }
           SENSOR.setMeasuresCounter(0);
           SENSOR.setDataBuffer(0);
@@ -71,7 +71,7 @@ void loop() {
         SENSOR.setMeasuresCounter(1);
       }
     }
-    delayMicroseconds(500);
+    delayMicroseconds(200);
     printTotalLoopRuntime(currentTime, previousTime);
   }
 }

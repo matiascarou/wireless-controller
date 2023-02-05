@@ -40,10 +40,10 @@ int16_t Sensor::getFloor(std::string &type) {
     { "potentiometer", 20 },
     { "force", 60 },
     { "sonar", 6 },
-    { "ax", 100 },
-    { "ay", 100 },
-    { "gx", 100 },
-    { "gy", 100 },
+    { "ax", 200 },
+    { "ay", 200 },
+    { "gx", 200 },
+    { "gy", 200 },
   };
   return floorValues[type];
 }
@@ -61,7 +61,7 @@ int16_t Sensor::getCeil(std::string &type) {
   return ceilValues[type];
 }
 
-Sensor::Sensor(const std::string sensorType, const uint8_t controllerNumber, uint8_t pin, uint8_t intPin) {
+Sensor::Sensor(const std::string &sensorType, const uint8_t &controllerNumber, const uint8_t &pin, const uint8_t &intPin) {
   _pin = pin;
   _controllerNumber = char(controllerNumber);
   _channel = char(0);
@@ -225,7 +225,7 @@ uint8_t Sensor::getMappedMidiValue(int16_t actualValue, int floor, int ceil) {
   return constrain(map(actualValue, _floor, _ceil, 0, 127), 0, 127);
 }
 
-void Sensor::sendMidiMessage(BLEMidiServerClass &serverInstance, char messageType[], uint8_t value, const char mode[]) {
+void Sensor::sendMidiMessage(BLEMidiServerClass &serverInstance, uint8_t value, const char mode[]) {
   if (strcmp(mode, "BLE") == 0) {
     if (_midiMessage == "controlChange") {
       serverInstance.controlChange(_channel, _controllerNumber, char(value));
@@ -245,7 +245,7 @@ void Sensor::sendMidiMessage(BLEMidiServerClass &serverInstance, char messageTyp
     Serial.write(_statusCode);
     Serial.write(_controllerNumber);
     Serial.write(char(value));
-  }
+  }1    
 }
 
 // int Sensor::runKalmanFilter(Kalman kalmanFilterInstance) {
