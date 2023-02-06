@@ -29,6 +29,7 @@ std::vector<Sensor> SENSORS = Sensor::initializeSensors();
 void setup() {
   Serial.begin(115200);
   Wire.begin();
+  delay(500);
   Serial.println("Initializing bluetooth");
   accelgyro.initialize();
   pinMode(ERROR_LED, OUTPUT);

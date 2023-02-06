@@ -27,10 +27,10 @@ int16_t Sensor::getFilterThreshold(std::string &type) {
     { "potentiometer", 40 },
     { "force", 5 },
     { "sonar", 40 },
-    { "ax", 50 },
-    { "ay", 50 },
-    { "gx", 50 },
-    { "gy", 50 },
+    { "ay", 70 },
+    { "ax", 70 },
+    { "gx", 70 },
+    { "gy", 70 },
   };
   return filterThresholdValues[type];
 }
@@ -112,7 +112,7 @@ void Sensor::setMidiChannel(uint8_t channel) {
 }
 
 void Sensor::setMeasuresCounter(uint8_t value) {
-  if (value == 0) {
+  if (!value) {
     this->measuresCounter = value;
   } else {
     this->measuresCounter += value;
@@ -120,7 +120,7 @@ void Sensor::setMeasuresCounter(uint8_t value) {
 }
 
 void Sensor::setDataBuffer(int16_t value) {
-  if (value == 0) {
+  if (!value) {
     this->dataBuffer = value;
   } else {
     this->dataBuffer += value;

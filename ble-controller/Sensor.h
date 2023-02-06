@@ -47,7 +47,7 @@ public:
   void sendSerialMidiMessage();
   void setMidiChannel(uint8_t channel);
 
-  static void setUpSensorPins(std::vector<Sensor> SENSORS) {
+  static void setUpSensorPins(std::vector<Sensor> &SENSORS) {
     for (Sensor SENSOR : SENSORS) {
       if (!!SENSOR._pin) {
         pinMode(SENSOR._pin, INPUT);
