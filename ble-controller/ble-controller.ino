@@ -15,7 +15,6 @@ void printTotalLoopRuntime(unsigned long current, unsigned long& previous) {
 * Code starts here
 **/
 #define ERROR_LED 2
-#define SONAR_PIN 13
 
 MPU6050 accelgyro;
 
@@ -25,8 +24,11 @@ void setup() {
   Serial.begin(115200);
   Wire.begin();
   delay(500);
-  Serial.println("Initializing bluetooth");
+  Serial.println("Initializing IMU...");
   accelgyro.initialize();
+
+  analogReadResolution(10);
+  Sensor::setUpSensorPins(SENSORS);
   pinMode(ERROR_LED, OUTPUT);
 
   if (accelgyro.testConnection()) {
@@ -36,19 +38,12 @@ void setup() {
     digitalWrite(ERROR_LED, HIGH);
   }
 
-  analogReadResolution(10);
-
-  Sensor::setUpSensorPins(SENSORS);
-  pinMode(SONAR_PIN, INPUT);
+  Serial.println("Initializing Bluetooth...");
 
   BLEMidiServer.begin("Le tuts controller");
 
-  // Serial.println("Sensors ready ʕノ•ᴥ•ʔノ");
-  Serial.println("Sensors ready (:");
+  Serial.println("Sensors ready ʕノ•ᴥ•ʔノ");
 }
-
-uint8_t currentValue = 0;
-uint8_t previousValue = 0;
 
 unsigned long previousTime = 0;
 unsigned long currentTime = 0;

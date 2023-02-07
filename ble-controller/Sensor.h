@@ -15,15 +15,15 @@ private:
   uint8_t measuresCounter;
   bool isActive;
   std::string _midiMessage;
+  std::string _sensorType;
+  unsigned long dataBuffer;
+  int16_t _threshold;
   int16_t getFloor(std::string &type);
   int16_t getFilterThreshold(std::string &type);
   int16_t getCeil(std::string &type);
 public:
   Sensor(const std::string &sensorType, const uint8_t &controllerNumber, const uint8_t &pin = 0, const uint8_t &intPin = 0);
-  std::string _sensorType;
   uint8_t filteredExponentialValue;
-  int16_t _threshold;
-  unsigned long dataBuffer;
   uint8_t _pin;
   uint8_t _intPin;
   uint8_t previousValue;
@@ -59,11 +59,6 @@ public:
     }
   }
 
-
-  /**
-* the pulseIn method used by the maxsonar sensor (pwPin) waits for a timeout,
-* Meaning is blocking and will generate unexpected delays related to all the other sensors.
-**/
   static std::vector<Sensor> initializeSensors() {
     const static std::vector<Sensor> SENSORS = {
       Sensor("potentiometer", 102, A0),

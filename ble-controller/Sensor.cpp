@@ -130,9 +130,16 @@ void Sensor::setDataBuffer(int16_t value) {
 }
 
 int16_t Sensor::getRawValue(MPU6050 &accelgyro) {
+  /**
+  * The pulseIn method used by the maxsonar sensor (pwPin) waits for a timeout,
+  * Meaning is blocking and will generate unexpected delays related to all the other sensors.
+  * Analog doesn't seem to be very precise, but it will be used for now.
+  * TODO: Test UART communication with the max sonar and the esp32 | stm32
+  **/
+
   // if (_sensorType == "sonar") {
-  //   // const unsigned long pulse = pulseIn(_pin, HIGH);
-  //   // return pulse / 147;
+  //   const unsigned long pulse = pulseIn(_pin, HIGH);
+  //   return pulse / 147;
   // }
 
   if (_sensorType == "potentiometer" || _sensorType == "force" || _sensorType == "sonar") {
