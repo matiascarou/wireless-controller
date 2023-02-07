@@ -5,12 +5,6 @@
 #include "Wire.h"
 #include "Sensor.h"
 
-void printMessage(uint8_t message) {
-  Serial.print("Message: ");
-  Serial.print(message);
-  Serial.print("\n");
-}
-
 void printTotalLoopRuntime(unsigned long current, unsigned long& previous) {
   Serial.print("Loop total time: ");
   Serial.println(current - previous);
@@ -21,6 +15,7 @@ void printTotalLoopRuntime(unsigned long current, unsigned long& previous) {
 * Code starts here
 **/
 #define ERROR_LED 2
+#define SONAR_PIN 13
 
 MPU6050 accelgyro;
 
@@ -44,12 +39,16 @@ void setup() {
   analogReadResolution(10);
 
   Sensor::setUpSensorPins(SENSORS);
+  pinMode(SONAR_PIN, INPUT);
 
   BLEMidiServer.begin("Le tuts controller");
 
   // Serial.println("Sensors ready ʕノ•ᴥ•ʔノ");
   Serial.println("Sensors ready (:");
 }
+
+uint8_t currentValue = 0;
+uint8_t previousValue = 0;
 
 unsigned long previousTime = 0;
 unsigned long currentTime = 0;

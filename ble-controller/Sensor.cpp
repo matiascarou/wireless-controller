@@ -1,6 +1,7 @@
 #include "Sensor.h"
 #include "MPU6050.h"
 #include <BLEMidi.h>
+// #include "Filter.h"
 
 // struct Value {
 //   int16_t floor;
@@ -26,7 +27,7 @@ int16_t Sensor::getFilterThreshold(std::string &type) {
   static std::map<std::string, int> filterThresholdValues = {
     { "potentiometer", 40 },
     { "force", 5 },
-    { "sonar", 40 },
+    { "sonar", 100 },
     { "ay", 70 },
     { "ax", 70 },
     { "gx", 70 },
@@ -77,6 +78,7 @@ Sensor::Sensor(const std::string &sensorType, const uint8_t &controllerNumber, c
   _floor = Sensor::getFloor(_sensorType);
   _ceil = Sensor::getCeil(_sensorType);
   _threshold = Sensor::getFilterThreshold(_sensorType);
+  // filters = Filter(this, accelgyro)
   // _floor = getValueFromMapObject(floorValues, _sensorType);
   // _ceil = getValueFromMapObject(ceilValues, _sensorType);
   // _threshold = getValueFromMapObject(thresholdValues, _sensorType);
@@ -128,16 +130,15 @@ void Sensor::setDataBuffer(int16_t value) {
 }
 
 int16_t Sensor::getRawValue(MPU6050 &accelgyro) {
+  // if (_sensorType == "sonar") {
+  //   // const unsigned long pulse = pulseIn(_pin, HIGH);
+  //   // return pulse / 147;
+  // }
 
-  if (_sensorType == "potentiometer" || _sensorType == "force") {
+  if (_sensorType == "potentiometer" || _sensorType == "force" || _sensorType == "sonar") {
     return analogRead(_pin);
   }
 
-  if (_sensorType == "sonar") {
-    const int16_t pulse = pulseIn(_pin, HIGH);
-    const int16_t pulgadas = pulse / 147;
-    return pulgadas;
-  }
 
   if (_sensorType == "ax") {
     const int16_t rawValue = accelgyro.getAccelerationX();
