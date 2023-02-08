@@ -237,11 +237,11 @@ uint8_t Sensor::getMappedMidiValue(int16_t actualValue, int floor, int ceil) {
 }
 
 void Sensor::debounce(MPU6050 &accelgyro, unsigned long &current, unsigned long &previous) {
-  this->previousToggleStatus = this->toggleStatus;
   static const uint8_t DEBOUNCE_THRESHOLD = 25;
+  this->previousToggleStatus = this->toggleStatus;
   if (_sensorType == "force") {
     if (current - previous >= DEBOUNCE_THRESHOLD) {
-      int16_t rawValue = this->getRawValue(accelgyro);
+      const int16_t rawValue = this->getRawValue(accelgyro);
       const uint8_t sensorMappedValue = this->getMappedMidiValue(rawValue);
       this->toggleStatus = !!sensorMappedValue ? true : false;
       previous = current;
@@ -250,19 +250,16 @@ void Sensor::debounce(MPU6050 &accelgyro, unsigned long &current, unsigned long 
 }
 
 void Sensor::sendBleMidiMessage(BLEMidiServerClass &serverInstance) {
-  if (_midiMessage != "gate") {
+  if (_midiMessage == "controlChange") {
     if (this->currentValue != this->previousValue) {
-      if (_midiMessage == "controlChange") {
-        serverInstance.controlChange(_channel, _controllerNumber, char(this->currentValue));
-      }
+      serverInstance.controlChange(_channel, _controllerNumber, char(this->currentValue));
     }
   }
   if (_midiMessage == "gate") {
     if (this->toggleStatus != this->previousToggleStatus) {
       if (this->toggleStatus) {
         serverInstance.noteOn(_channel, char(60), char(127));
-      }
-      if (!this->toggleStatus) {
+      } else {
         serverInstance.noteOff(_channel, char(60), char(127));
       }
     }
@@ -291,9 +288,6 @@ void Sensor::sendSerialMidiMessage() {
   }
 }
 
-/**
-* Working function without debounce
-**/
 // int Sensor::runKalmanFilter(Kalman kalmanFilterInstance) {
 //   const int16_t rawValue = this->getRawValue(accelgyro);
 //   const float filteredFloatValue = kalman.filter(sensorValue);
