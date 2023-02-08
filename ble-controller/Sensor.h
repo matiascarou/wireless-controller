@@ -14,8 +14,11 @@ private:
   int16_t _ceil;
   uint8_t measuresCounter;
   bool isActive;
+  bool toggleStatus;
+  bool previousToggleStatus;
   std::string _midiMessage;
   std::string _sensorType;
+  bool isAlreadyPressed;
   unsigned long dataBuffer;
   int16_t _threshold;
   int16_t getFloor(std::string &type);
@@ -47,6 +50,7 @@ public:
   void sendBleMidiMessage(BLEMidiServerClass &serverInstance);
   void sendSerialMidiMessage();
   void setMidiChannel(uint8_t channel);
+  void debounce(MPU6050 &accelgyro, unsigned long &current, unsigned long &previous);
 
   static void setUpSensorPins(std::vector<Sensor> &SENSORS) {
     for (Sensor SENSOR : SENSORS) {

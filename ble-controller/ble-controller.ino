@@ -21,7 +21,7 @@ MPU6050 accelgyro;
 std::vector<Sensor> SENSORS = Sensor::initializeSensors();
 
 void setup() {
-  Serial.begin(115200);
+  Serial.begin(230400);
   Wire.begin();
   delay(500);
   Serial.println("Initializing IMU...");
@@ -45,12 +45,12 @@ void setup() {
   Serial.println("Sensors ready ʕノ•ᴥ•ʔノ");
 }
 
-unsigned long previousTime = 0;
-unsigned long currentTime = 0;
+unsigned long PREVIOUS_TIME = 0;
+unsigned long CURRENT_TIME = 0;
 
 void loop() {
   if (BLEMidiServer.isConnected()) {
-    currentTime = millis();
+    CURRENT_TIME = millis();
     for (Sensor& SENSOR : SENSORS) {
       if (SENSOR.isSwitchActive()) {
         int16_t rawValue = SENSOR.getRawValue(accelgyro);
@@ -60,16 +60,15 @@ void loop() {
           const uint8_t sensorMappedValue = SENSOR.getMappedMidiValue(averageValue);
           SENSOR.setPreviousValue(SENSOR.currentValue);
           SENSOR.setCurrentValue(sensorMappedValue);
-          if (SENSOR.currentValue != SENSOR.previousValue) {
-            SENSOR.sendBleMidiMessage(BLEMidiServer);
-          }
+          SENSOR.debounce(accelgyro, CURRENT_TIME, PREVIOUS_TIME);
+          SENSOR.sendBleMidiMessage(BLEMidiServer);
           SENSOR.setMeasuresCounter(0);
           SENSOR.setDataBuffer(0);
         }
         SENSOR.setMeasuresCounter(1);
       }
     }
-    delayMicroseconds(200);
-    // printTotalLoopRuntime(currentTime, previousTime);
   }
+  delayMicroseconds(500);
+  // printTotalLoopRuntime(currentTime, previousTime);
 }

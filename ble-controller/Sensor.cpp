@@ -26,12 +26,12 @@
 int16_t Sensor::getFilterThreshold(std::string &type) {
   static std::map<std::string, int> filterThresholdValues = {
     { "potentiometer", 40 },
-    { "force", 5 },
+    { "force", 1 },
     { "sonar", 100 },
-    { "ay", 70 },
-    { "ax", 70 },
-    { "gx", 70 },
-    { "gy", 70 },
+    { "ay", 60 },
+    { "ax", 60 },
+    { "gx", 60 },
+    { "gy", 60 },
   };
   return filterThresholdValues[type];
 }
@@ -41,10 +41,10 @@ int16_t Sensor::getFloor(std::string &type) {
     { "potentiometer", 20 },
     { "force", 60 },
     { "sonar", 6 },
-    { "ax", 200 },
-    { "ay", 200 },
-    { "gx", 200 },
-    { "gy", 200 },
+    { "ax", 150 },
+    { "ay", 150 },
+    { "gx", 150 },
+    { "gy", 150 },
   };
   return floorValues[type];
 }
@@ -83,6 +83,9 @@ Sensor::Sensor(const std::string &sensorType, const uint8_t &controllerNumber, c
   // _ceil = getValueFromMapObject(ceilValues, _sensorType);
   // _threshold = getValueFromMapObject(thresholdValues, _sensorType);
   isActive = false;
+  toggleStatus = false;
+  previousToggleStatus = toggleStatus;
+  isAlreadyPressed = false;
 }
 
 bool Sensor::isSwitchActive() {
@@ -138,7 +141,7 @@ int16_t Sensor::getRawValue(MPU6050 &accelgyro) {
   **/
 
   // if (_sensorType == "sonar") {
-  //   const unsigned long pulse = pulseIn(_pin, HIGH);
+  //   const unsigned long pulse = pulseIn(_pin, HIGH, 5000);
   //   return pulse / 147;
   // }
 
@@ -233,19 +236,35 @@ uint8_t Sensor::getMappedMidiValue(int16_t actualValue, int floor, int ceil) {
   return constrain(map(actualValue, _floor, _ceil, 0, 127), 0, 127);
 }
 
+void Sensor::debounce(MPU6050 &accelgyro, unsigned long &current, unsigned long &previous) {
+  this->previousToggleStatus = this->toggleStatus;
+  static const uint8_t DEBOUNCE_THRESHOLD = 25;
+  if (_sensorType == "force") {
+    if (current - previous >= DEBOUNCE_THRESHOLD) {
+      int16_t rawValue = this->getRawValue(accelgyro);
+      const uint8_t sensorMappedValue = this->getMappedMidiValue(rawValue);
+      this->toggleStatus = !!sensorMappedValue ? true : false;
+      previous = current;
+    }
+  }
+}
 
 void Sensor::sendBleMidiMessage(BLEMidiServerClass &serverInstance) {
-  if (_midiMessage == "controlChange") {
-    serverInstance.controlChange(_channel, _controllerNumber, char(this->currentValue));
+  if (_midiMessage != "gate") {
+    if (this->currentValue != this->previousValue) {
+      if (_midiMessage == "controlChange") {
+        serverInstance.controlChange(_channel, _controllerNumber, char(this->currentValue));
+      }
+    }
   }
   if (_midiMessage == "gate") {
-    if (!!this->currentValue && !this->isActive) {
-      serverInstance.noteOn(_channel, char(60), char(127));
-      this->isActive = true;
-    }
-    if (!this->currentValue && this->isActive) {
-      serverInstance.noteOff(_channel, char(60), char(127));
-      this->isActive = false;
+    if (this->toggleStatus != this->previousToggleStatus) {
+      if (this->toggleStatus) {
+        serverInstance.noteOn(_channel, char(60), char(127));
+      }
+      if (!this->toggleStatus) {
+        serverInstance.noteOff(_channel, char(60), char(127));
+      }
     }
   }
 }
@@ -272,29 +291,9 @@ void Sensor::sendSerialMidiMessage() {
   }
 }
 
-// void Sensor::sendMidiMessage(BLEMidiServerClass &serverInstance, const char mode[]) {
-//   if (strcmp(mode, "BLE") == 0) {
-//     if (_midiMessage == "controlChange") {
-//       serverInstance.controlChange(_channel, _controllerNumber, char(this->currentValue));
-//     }
-//     if (_midiMessage == "gate") {
-//       if (!!this->currentValue && !this->isActive) {
-//         serverInstance.noteOn(_channel, char(60), char(127));
-//         this->isActive = true;
-//       }
-//       if (!this->currentValue && this->isActive) {
-//         serverInstance.noteOff(_channel, char(60), char(127));
-//         this->isActive = false;
-//       }
-//     }
-//   }
-//   if (strcmp(mode, "Serial") == 0) {
-//     Serial.write(_statusCode);
-//     Serial.write(_controllerNumber);
-//     Serial.write(char(this->currentValue));
-//   }
-// }
-
+/**
+* Working function without debounce
+**/
 // int Sensor::runKalmanFilter(Kalman kalmanFilterInstance) {
 //   const int16_t rawValue = this->getRawValue(accelgyro);
 //   const float filteredFloatValue = kalman.filter(sensorValue);
