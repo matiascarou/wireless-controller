@@ -273,17 +273,16 @@ void Sensor::sendSerialMidiMessage() {
     Serial.write(char(this->currentValue));
   }
   if (_midiMessage == "gate") {
-    if (!!this->currentValue && !this->isActive) {
-      Serial.write(char(144));
-      Serial.write(char(60));
-      Serial.write(char(127));
-      this->isActive = true;
-    }
-    if (!this->currentValue && this->isActive) {
-      Serial.write(char(128));
-      Serial.write(char(60));
-      Serial.write(char(127));
-      this->isActive = false;
+    if (this->toggleStatus != this->previousToggleStatus) {
+      if (this->toggleStatus) {
+        Serial.write(char(144));
+        Serial.write(char(60));
+        Serial.write(char(127));
+      } else {
+        Serial.write(char(128));
+        Serial.write(char(60));
+        Serial.write(char(127));
+      }
     }
   }
 }
