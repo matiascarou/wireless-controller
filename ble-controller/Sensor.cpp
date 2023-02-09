@@ -3,44 +3,33 @@
 #include <BLEMidi.h>
 // #include "Filter.h"
 
-// struct Value {
-//   int16_t floor;
-//   int16_t ceil;
-//   int16_t threshold;
-// };
-
-// static std::map<std::string, Value> values = {
-//   { "potentiometer", { 20, 1023, 30 } },
-//   { "force", { 20, 1023, 20 } },
-//   { "sonar", { 6, 30, 40 } },
-//   { "ax", { 100, 15500, 50 } },
-//   { "ay", { 100, 15500, 50 } },
-//   { "gx", { 100, 15500, 50 } },
-//   { "gy", { 100, 15500, 50 } },
-// };
-
-// int16_t getValueFromMapObject(std::map<std::string, Value> mapObject, std::string &type) {
-
-// }
+uint16_t Sensor::getDebounceThreshold(std::string &type) {
+  static std::map<std::string, int> debounceThresholdValues = {
+    { "force", 25 },
+    { "sonar", 50 },
+  };
+  return debounceThresholdValues[type];
+}
 
 int16_t Sensor::getFilterThreshold(std::string &type) {
   static std::map<std::string, int> filterThresholdValues = {
     { "potentiometer", 40 },
     { "force", 1 },
-    { "sonar", 100 },
-    { "ay", 60 },
-    { "ax", 60 },
-    { "gx", 60 },
-    { "gy", 60 },
+    { "sonar", 1 },
+    { "ay", 55 },
+    { "ax", 55 },
+    { "gx", 55 },
+    { "gy", 55 },
   };
   return filterThresholdValues[type];
 }
+
 
 int16_t Sensor::getFloor(std::string &type) {
   static std::map<std::string, int> floorValues = {
     { "potentiometer", 20 },
     { "force", 60 },
-    { "sonar", 6 },
+    { "sonar", 50 },
     { "ax", 150 },
     { "ay", 150 },
     { "gx", 150 },
@@ -53,7 +42,7 @@ int16_t Sensor::getCeil(std::string &type) {
   static std::map<std::string, int> ceilValues = {
     { "potentiometer", 1000 },
     { "force", 1000 },
-    { "sonar", 30 },
+    { "sonar", 65 },
     { "ax", 15500 },
     { "ay", 15500 },
     { "gx", 15500 },
@@ -75,17 +64,20 @@ Sensor::Sensor(const std::string &sensorType, const uint8_t &controllerNumber, c
   dataBuffer = 0;
   measuresCounter = 0;
   filteredExponentialValue = 0;
-  _floor = Sensor::getFloor(_sensorType);
-  _ceil = Sensor::getCeil(_sensorType);
-  _threshold = Sensor::getFilterThreshold(_sensorType);
-  // filters = Filter(this, accelgyro)
-  // _floor = getValueFromMapObject(floorValues, _sensorType);
-  // _ceil = getValueFromMapObject(ceilValues, _sensorType);
-  // _threshold = getValueFromMapObject(thresholdValues, _sensorType);
+  _currentDebounceValue = 0;
+  _previousDebounceValue = 0;
   isActive = false;
   toggleStatus = false;
   previousToggleStatus = toggleStatus;
   isAlreadyPressed = false;
+  _floor = Sensor::getFloor(_sensorType);
+  _ceil = Sensor::getCeil(_sensorType);
+  _threshold = Sensor::getFilterThreshold(_sensorType);
+  _debounceThreshold = Sensor::getDebounceThreshold(_sensorType);
+  // _floor = getValueFromMapObject(floorValues, _sensorType);
+  // _ceil = getValueFromMapObject(ceilValues, _sensorType);
+  // _threshold = getValueFromMapObject(thresholdValues, _sensorType);
+  // filters = Filter(this, accelgyro)
 }
 
 bool Sensor::isSwitchActive() {
@@ -116,35 +108,19 @@ void Sensor::setMidiChannel(uint8_t channel) {
   this->_channel = channel;
 }
 
+void Sensor::setCurrentDebounceValue(unsigned long timeValue) {
+  this->_currentDebounceValue = timeValue;
+}
+
 void Sensor::setMeasuresCounter(uint8_t value) {
-  if (!value) {
-    this->measuresCounter = value;
-  } else {
-    this->measuresCounter += value;
-  }
+  this->measuresCounter = !value ? value : this->measuresCounter + value;
 }
 
 void Sensor::setDataBuffer(int16_t value) {
-  if (!value) {
-    this->dataBuffer = value;
-  } else {
-    this->dataBuffer += value;
-  }
+  this->dataBuffer = !value ? value : this->dataBuffer + value;
 }
 
 int16_t Sensor::getRawValue(MPU6050 &accelgyro) {
-  /**
-  * The pulseIn method used by the maxsonar sensor (pwPin) waits for a timeout,
-  * Meaning is blocking and will generate unexpected delays related to all the other sensors.
-  * Analog doesn't seem to be very precise, but it will be used for now.
-  * TODO: Test UART communication with the max sonar and the esp32 | stm32
-  **/
-
-  // if (_sensorType == "sonar") {
-  //   const unsigned long pulse = pulseIn(_pin, HIGH, 5000);
-  //   return pulse / 147;
-  // }
-
   if (_sensorType == "potentiometer" || _sensorType == "force" || _sensorType == "sonar") {
     return analogRead(_pin);
   }
@@ -236,15 +212,24 @@ uint8_t Sensor::getMappedMidiValue(int16_t actualValue, int floor, int ceil) {
   return constrain(map(actualValue, _floor, _ceil, 0, 127), 0, 127);
 }
 
-void Sensor::debounce(MPU6050 &accelgyro, unsigned long &current, unsigned long &previous) {
-  static const uint8_t DEBOUNCE_THRESHOLD = 25;
-  this->previousToggleStatus = this->toggleStatus;
+void Sensor::debounce(MPU6050 &accelgyro) {
+  if (_sensorType == "sonar") {
+    if (this->_currentDebounceValue - this->_previousDebounceValue >= _debounceThreshold) {
+      const int16_t rawValue = this->getRawValue(accelgyro);
+      const uint8_t sensorMappedValue = this->getMappedMidiValue(rawValue);
+      if (this->currentValue != sensorMappedValue) {
+        this->currentValue = this->previousValue;
+      }
+      this->_previousDebounceValue = this->_currentDebounceValue;
+    }
+  }
   if (_sensorType == "force") {
-    if (current - previous >= DEBOUNCE_THRESHOLD) {
+    this->previousToggleStatus = this->toggleStatus;
+    if (this->_currentDebounceValue - this->_previousDebounceValue >= _debounceThreshold) {
       const int16_t rawValue = this->getRawValue(accelgyro);
       const uint8_t sensorMappedValue = this->getMappedMidiValue(rawValue);
       this->toggleStatus = !!sensorMappedValue ? true : false;
-      previous = current;
+      this->_previousDebounceValue = this->_currentDebounceValue;
     }
   }
 }
@@ -286,6 +271,18 @@ void Sensor::sendSerialMidiMessage() {
     }
   }
 }
+
+/**
+  * The pulseIn method used by the maxsonar sensor (pwPin) waits for a timeout,
+  * Meaning is blocking and will generate unexpected delays related to all the other sensors.
+  * Analog doesn't seem to be very precise, but it will be used for now.
+  * TODO: Test UART communication with the max sonar and the esp32 | stm32
+  **/
+
+// if (_sensorType == "sonar") {
+//   const unsigned long pulse = pulseIn(_pin, HIGH, 5000);
+//   return pulse / 147;
+// }
 
 // int Sensor::runKalmanFilter(Kalman kalmanFilterInstance) {
 //   const int16_t rawValue = this->getRawValue(accelgyro);
@@ -331,4 +328,24 @@ void Sensor::sendSerialMidiMessage() {
 //     });
 //     return steps;
 //   }
+// }
+
+// struct Value {
+//   int16_t floor;
+//   int16_t ceil;
+//   int16_t threshold;
+// };
+
+// static std::map<std::string, Value> values = {
+//   { "potentiometer", { 20, 1023, 30 } },
+//   { "force", { 20, 1023, 20 } },
+//   { "sonar", { 6, 30, 40 } },
+//   { "ax", { 100, 15500, 50 } },
+//   { "ay", { 100, 15500, 50 } },
+//   { "gx", { 100, 15500, 50 } },
+//   { "gy", { 100, 15500, 50 } },
+// };
+
+// int16_t getValueFromMapObject(std::map<std::string, Value> mapObject, std::string &type) {
+
 // }

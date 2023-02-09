@@ -45,22 +45,20 @@ void setup() {
   Serial.println("Sensors ready ʕノ•ᴥ•ʔノ");
 }
 
-unsigned long PREVIOUS_TIME = 0;
-unsigned long CURRENT_TIME = 0;
-
 void loop() {
   if (BLEMidiServer.isConnected()) {
-    CURRENT_TIME = millis();
     for (Sensor& SENSOR : SENSORS) {
       if (SENSOR.isSwitchActive()) {
         int16_t rawValue = SENSOR.getRawValue(accelgyro);
         SENSOR.setDataBuffer(rawValue);
         if (SENSOR.isAboveThreshold()) {
+          const unsigned long currentDebounceValue = millis();
+          SENSOR.setCurrentDebounceValue(currentDebounceValue);
           const int16_t averageValue = SENSOR.runNonBlockingAverageFilter();
           const uint8_t sensorMappedValue = SENSOR.getMappedMidiValue(averageValue);
           SENSOR.setPreviousValue(SENSOR.currentValue);
           SENSOR.setCurrentValue(sensorMappedValue);
-          SENSOR.debounce(accelgyro, CURRENT_TIME, PREVIOUS_TIME);
+          SENSOR.debounce(accelgyro);
           SENSOR.sendBleMidiMessage(BLEMidiServer);
           SENSOR.setMeasuresCounter(0);
           SENSOR.setDataBuffer(0);

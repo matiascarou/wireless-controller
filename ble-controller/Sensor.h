@@ -10,22 +10,26 @@ private:
   char _controllerNumber;
   char _channel;
   char _statusCode;
-  int16_t _floor;
-  int16_t _ceil;
   uint8_t measuresCounter;
   bool isActive;
   bool toggleStatus;
   bool previousToggleStatus;
   std::string _midiMessage;
-  std::string _sensorType;
   bool isAlreadyPressed;
   unsigned long dataBuffer;
+  uint16_t _debounceThreshold;
+  unsigned long _currentDebounceValue;
+  unsigned long _previousDebounceValue;
   int16_t _threshold;
+  int16_t _floor;
+  int16_t _ceil;
   int16_t getFloor(std::string &type);
   int16_t getFilterThreshold(std::string &type);
   int16_t getCeil(std::string &type);
+  uint16_t getDebounceThreshold(std::string &type);
 public:
   Sensor(const std::string &sensorType, const uint8_t &controllerNumber, const uint8_t &pin = 0, const uint8_t &intPin = 0);
+  std::string _sensorType;
   uint8_t filteredExponentialValue;
   uint8_t _pin;
   uint8_t _intPin;
@@ -40,6 +44,7 @@ public:
   int16_t runNonBlockingAverageFilter();
   int16_t runExponentialFilter(int measureSize, MPU6050 &accelgyro, float alpha = 0.2);
   std::vector< uint8_t > getValuesBetweenRanges(uint8_t gap = 1);
+  void setCurrentDebounceValue(unsigned long timeValue);
   void setCurrentValue(uint8_t value);
   void setPreviousValue(uint8_t value);
   void setMeasuresCounter(uint8_t value);
@@ -50,7 +55,7 @@ public:
   void sendBleMidiMessage(BLEMidiServerClass &serverInstance);
   void sendSerialMidiMessage();
   void setMidiChannel(uint8_t channel);
-  void debounce(MPU6050 &accelgyro, unsigned long &current, unsigned long &previous);
+  void debounce(MPU6050 &accelgyro);
 
   static void setUpSensorPins(std::vector<Sensor> &SENSORS) {
     for (Sensor SENSOR : SENSORS) {
