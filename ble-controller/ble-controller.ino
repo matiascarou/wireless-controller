@@ -21,7 +21,7 @@ MPU6050 accelgyro;
 std::vector<Sensor> SENSORS = Sensor::initializeSensors();
 
 void setup() {
-  Serial.begin(230400);
+  Serial.begin(115200);
   Wire.begin();
   delay(500);
   Serial.println("Initializing IMU...");
@@ -42,7 +42,8 @@ void setup() {
 
   BLEMidiServer.begin("Le tuts controller");
 
-  Serial.println("Sensors ready ʕノ•ᴥ•ʔノ");
+  // Serial.println("Sensors ready ʕノ•ᴥ•ʔノ");
+  Serial.println("Sensors ready (:");
 }
 
 void loop() {

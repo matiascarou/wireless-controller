@@ -6,7 +6,7 @@
 uint16_t Sensor::getDebounceThreshold(std::string &type) {
   static std::map<std::string, int> debounceThresholdValues = {
     { "force", 25 },
-    { "sonar", 50 },
+    { "sonar", 100 },
   };
   return debounceThresholdValues[type];
 }
@@ -16,10 +16,10 @@ int16_t Sensor::getFilterThreshold(std::string &type) {
     { "potentiometer", 40 },
     { "force", 1 },
     { "sonar", 1 },
-    { "ay", 55 },
-    { "ax", 55 },
-    { "gx", 55 },
-    { "gy", 55 },
+    { "ay", 50 },
+    { "ax", 50 },
+    { "gx", 50 },
+    { "gy", 50 },
   };
   return filterThresholdValues[type];
 }
