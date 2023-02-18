@@ -4,6 +4,7 @@
 #include "MPU6050.h"
 #include "Wire.h"
 #include "Sensor.h"
+#include "Adafruit_VL53L0X.h"
 
 void printTotalLoopRuntime(unsigned long current, unsigned long& previous) {
   Serial.print("Loop total time: ");
@@ -17,6 +18,8 @@ void printTotalLoopRuntime(unsigned long current, unsigned long& previous) {
 #define ERROR_LED 2
 
 MPU6050 accelgyro;
+
+Adafruit_VL53L0X lox = Adafruit_VL53L0X();
 
 std::vector<Sensor> SENSORS = Sensor::initializeSensors();
 
@@ -38,19 +41,30 @@ void setup() {
     digitalWrite(ERROR_LED, HIGH);
   }
 
+  if (!lox.begin()) {
+    Serial.println(F("Failed to boot VL53L0X"));
+    digitalWrite(ERROR_LED, HIGH);
+  }
+
   Serial.println("Initializing Bluetooth...");
 
   BLEMidiServer.begin("Le tuts controller");
 
   // Serial.println("Sensors ready ʕノ•ᴥ•ʔノ");
+
   Serial.println("Sensors ready (:");
 }
 
+unsigned long currentTime = 0;
+unsigned long previousTime = 0;
+
 void loop() {
   if (BLEMidiServer.isConnected()) {
+    currentTime = millis();
     for (Sensor& SENSOR : SENSORS) {
       if (SENSOR.isSwitchActive()) {
-        int16_t rawValue = SENSOR.getRawValue(accelgyro);
+        int16_t rawValue = SENSOR.getRawValue(accelgyro, lox);
+        SENSOR.setPreviousRawValue(rawValue);
         SENSOR.setDataBuffer(rawValue);
         if (SENSOR.isAboveThreshold()) {
           const unsigned long currentDebounceValue = millis();
@@ -59,7 +73,7 @@ void loop() {
           const uint8_t sensorMappedValue = SENSOR.getMappedMidiValue(averageValue);
           SENSOR.setPreviousValue(SENSOR.currentValue);
           SENSOR.setCurrentValue(sensorMappedValue);
-          SENSOR.debounce(accelgyro);
+          SENSOR.debounce(accelgyro, lox);
           SENSOR.sendBleMidiMessage(BLEMidiServer);
           SENSOR.setMeasuresCounter(0);
           SENSOR.setDataBuffer(0);
@@ -67,7 +81,7 @@ void loop() {
         SENSOR.setMeasuresCounter(1);
       }
     }
+    delay(1);
+    // printTotalLoopRuntime(currentTime, previousTime);
   }
-  delayMicroseconds(500);
-  // printTotalLoopRuntime(currentTime, previousTime);
 }

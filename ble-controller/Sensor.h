@@ -3,6 +3,7 @@
 #include <Arduino.h>
 #include "MPU6050.h"
 #include <BLEMidi.h>
+#include "Adafruit_VL53L0X.h"
 // #include "Filter.h"
 
 class Sensor {
@@ -34,19 +35,21 @@ public:
   uint8_t _pin;
   uint8_t _intPin;
   uint8_t previousValue;
+  int16_t previousRawValue;
   uint8_t currentValue;
   int16_t filteredValue;
   bool isSwitchActive();
   bool isAboveThreshold();
   uint8_t getMappedMidiValue(int16_t actualValue, int floor = 0, int ceil = 0);
-  int16_t getRawValue(MPU6050 &accelgyro);
-  int16_t runBlockingAverageFilter(int measureSize, MPU6050 &accelgyro, int gap = 1);
+  int16_t getRawValue(MPU6050 &accelgyro, Adafruit_VL53L0X &lox);
   int16_t runNonBlockingAverageFilter();
-  int16_t runExponentialFilter(int measureSize, MPU6050 &accelgyro, float alpha = 0.2);
+  // int16_t runBlockingAverageFilter(int measureSize, MPU6050 &accelgyro, int gap = 1);
+  // int16_t runExponentialFilter(int measureSize, MPU6050 &accelgyro, float alpha = 0.2);
   std::vector< uint8_t > getValuesBetweenRanges(uint8_t gap = 1);
   void setCurrentDebounceValue(unsigned long timeValue);
   void setCurrentValue(uint8_t value);
   void setPreviousValue(uint8_t value);
+  void setPreviousRawValue(int16_t value);
   void setMeasuresCounter(uint8_t value);
   void setDataBuffer(int16_t value);
   void setThreshold(uint8_t value);
@@ -55,7 +58,7 @@ public:
   void sendBleMidiMessage(BLEMidiServerClass &serverInstance);
   void sendSerialMidiMessage();
   void setMidiChannel(uint8_t channel);
-  void debounce(MPU6050 &accelgyro);
+  void debounce(MPU6050 &accelgyro, Adafruit_VL53L0X &lox);
 
   static void setUpSensorPins(std::vector<Sensor> &SENSORS) {
     for (Sensor SENSOR : SENSORS) {
@@ -73,9 +76,9 @@ public:
       Sensor("potentiometer", 102, A0),
       Sensor("potentiometer", 103, A3),
       Sensor("force", 104, A6),
-      Sensor("ax", 105, 0, 18),
+      Sensor("ax", 105, 0, 5),
       Sensor("ay", 106, 0, 19),
-      // Sensor("sonar", 107, A7),
+      Sensor("infrared", 108, 0, 18),
     };
     return SENSORS;
     /**

@@ -1,11 +1,12 @@
 #include "Sensor.h"
 #include "MPU6050.h"
 #include <BLEMidi.h>
+#include "Adafruit_VL53L0X.h"
 // #include "Filter.h"
 
 uint16_t Sensor::getDebounceThreshold(std::string &type) {
   static std::map<std::string, int> debounceThresholdValues = {
-    { "force", 25 },
+    { "force", 30 },
     { "sonar", 100 },
   };
   return debounceThresholdValues[type];
@@ -16,10 +17,13 @@ int16_t Sensor::getFilterThreshold(std::string &type) {
     { "potentiometer", 40 },
     { "force", 1 },
     { "sonar", 1 },
-    { "ay", 50 },
-    { "ax", 50 },
-    { "gx", 50 },
-    { "gy", 50 },
+    { "ax", 40 },
+    { "ay", 40 },
+    { "az", 40 },
+    { "gx", 40 },
+    { "gy", 40 },
+    { "gz", 40 },
+    { "infrared", 1 },
   };
   return filterThresholdValues[type];
 }
@@ -30,10 +34,13 @@ int16_t Sensor::getFloor(std::string &type) {
     { "potentiometer", 20 },
     { "force", 60 },
     { "sonar", 50 },
-    { "ax", 150 },
-    { "ay", 150 },
-    { "gx", 150 },
-    { "gy", 150 },
+    { "ax", 50 },
+    { "ay", 50 },
+    { "az", 50 },
+    { "gx", 50 },
+    { "gy", 50 },
+    { "gz", 50 },
+    { "infrared", 70 },
   };
   return floorValues[type];
 }
@@ -45,8 +52,11 @@ int16_t Sensor::getCeil(std::string &type) {
     { "sonar", 65 },
     { "ax", 15500 },
     { "ay", 15500 },
+    { "az", 15500 },
     { "gx", 15500 },
     { "gy", 15500 },
+    { "gz", 15500 },
+    { "infrared", 400 },
   };
   return ceilValues[type];
 }
@@ -60,6 +70,7 @@ Sensor::Sensor(const std::string &sensorType, const uint8_t &controllerNumber, c
   _midiMessage = sensorType != "force" ? "controlChange" : "gate";
   _sensorType = sensorType;
   previousValue = 0;
+  previousRawValue = 0;
   currentValue = 0;
   dataBuffer = 0;
   measuresCounter = 0;
@@ -74,14 +85,11 @@ Sensor::Sensor(const std::string &sensorType, const uint8_t &controllerNumber, c
   _ceil = Sensor::getCeil(_sensorType);
   _threshold = Sensor::getFilterThreshold(_sensorType);
   _debounceThreshold = Sensor::getDebounceThreshold(_sensorType);
-  // _floor = getValueFromMapObject(floorValues, _sensorType);
-  // _ceil = getValueFromMapObject(ceilValues, _sensorType);
-  // _threshold = getValueFromMapObject(thresholdValues, _sensorType);
   // filters = Filter(this, accelgyro)
 }
 
 bool Sensor::isSwitchActive() {
-  return this->_intPin ? !!digitalRead(this->_intPin) : true;
+  return !!this->_intPin ? !!digitalRead(this->_intPin) : true;
 };
 
 bool Sensor::isAboveThreshold() {
@@ -104,6 +112,10 @@ void Sensor::setPreviousValue(uint8_t value) {
   this->previousValue = value;
 }
 
+void Sensor::setPreviousRawValue(int16_t value) {
+  this->previousRawValue = value;
+}
+
 void Sensor::setMidiChannel(uint8_t channel) {
   this->_channel = channel;
 }
@@ -120,9 +132,17 @@ void Sensor::setDataBuffer(int16_t value) {
   this->dataBuffer = !value ? value : this->dataBuffer + value;
 }
 
-int16_t Sensor::getRawValue(MPU6050 &accelgyro) {
+int16_t Sensor::getRawValue(MPU6050 &accelgyro, Adafruit_VL53L0X &lox) {
   if (_sensorType == "potentiometer" || _sensorType == "force" || _sensorType == "sonar") {
     return analogRead(_pin);
+  }
+
+  if (_sensorType == "infrared") {
+    VL53L0X_RangingMeasurementData_t measure;
+
+    lox.rangingTest(&measure, false);
+
+    return measure.RangeStatus != 4 ? measure.RangeMilliMeter : this->previousRawValue;
   }
 
 
@@ -159,29 +179,29 @@ int16_t Sensor::getRawValue(MPU6050 &accelgyro) {
   return 0;
 }
 
-int16_t Sensor::runBlockingAverageFilter(int measureSize, MPU6050 &accelgyro, int gap) {
-  int buffer = 0;
-  for (int i = 0; i < measureSize; i++) {
-    int16_t value = this->getRawValue(accelgyro);
-    if (value < 0) {
-      value = 0;
-    }
-    buffer += value;
-    delayMicroseconds(gap);
-  }
-  const int16_t result = buffer / measureSize;
-  return result;
-}
+// int16_t Sensor::runBlockingAverageFilter(int measureSize, MPU6050 &accelgyro, int gap) {
+//   int buffer = 0;
+//   for (int i = 0; i < measureSize; i++) {
+//     int16_t value = this->getRawValue(accelgyro);
+//     if (value < 0) {
+//       value = 0;
+//     }
+//     buffer += value;
+//     delayMicroseconds(gap);
+//   }
+//   const int16_t result = buffer / measureSize;
+//   return result;
+// }
 
 int16_t Sensor::runNonBlockingAverageFilter() {
   return this->dataBuffer / _threshold;
 }
 
-int16_t Sensor::runExponentialFilter(int measureSize, MPU6050 &accelgyro, float alpha) {
-  const int16_t rawValue = this->getRawValue(accelgyro);
-  this->filteredExponentialValue = (alpha * rawValue) + (1 - alpha) * this->filteredExponentialValue;
-  return this->filteredExponentialValue;
-}
+// int16_t Sensor::runExponentialFilter(int measureSize, MPU6050 &accelgyro, float alpha) {
+//   const int16_t rawValue = this->getRawValue(accelgyro);
+//   this->filteredExponentialValue = (alpha * rawValue) + (1 - alpha) * this->filteredExponentialValue;
+//   return this->filteredExponentialValue;
+// }
 
 std::vector< uint8_t > Sensor::getValuesBetweenRanges(uint8_t gap) {
   uint8_t samples = 1;
@@ -212,10 +232,10 @@ uint8_t Sensor::getMappedMidiValue(int16_t actualValue, int floor, int ceil) {
   return constrain(map(actualValue, _floor, _ceil, 0, 127), 0, 127);
 }
 
-void Sensor::debounce(MPU6050 &accelgyro) {
+void Sensor::debounce(MPU6050 &accelgyro, Adafruit_VL53L0X &lox) {
   if (_sensorType == "sonar") {
     if (this->_currentDebounceValue - this->_previousDebounceValue >= _debounceThreshold) {
-      const int16_t rawValue = this->getRawValue(accelgyro);
+      const int16_t rawValue = this->getRawValue(accelgyro, lox);
       const uint8_t sensorMappedValue = this->getMappedMidiValue(rawValue);
       if (this->currentValue != sensorMappedValue) {
         this->currentValue = this->previousValue;
@@ -226,7 +246,7 @@ void Sensor::debounce(MPU6050 &accelgyro) {
   if (_sensorType == "force") {
     this->previousToggleStatus = this->toggleStatus;
     if (this->_currentDebounceValue - this->_previousDebounceValue >= _debounceThreshold) {
-      const int16_t rawValue = this->getRawValue(accelgyro);
+      const int16_t rawValue = this->getRawValue(accelgyro, lox);
       const uint8_t sensorMappedValue = this->getMappedMidiValue(rawValue);
       this->toggleStatus = !!sensorMappedValue ? true : false;
       this->_previousDebounceValue = this->_currentDebounceValue;
@@ -271,6 +291,10 @@ void Sensor::sendSerialMidiMessage() {
     }
   }
 }
+
+// _floor = getValueFromMapObject(floorValues, _sensorType);
+// _ceil = getValueFromMapObject(ceilValues, _sensorType);
+// _threshold = getValueFromMapObject(thresholdValues, _sensorType);
 
 /**
   * The pulseIn method used by the maxsonar sensor (pwPin) waits for a timeout,
