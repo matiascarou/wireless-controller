@@ -23,8 +23,14 @@ Adafruit_VL53L0X lox = Adafruit_VL53L0X();
 
 std::vector<Sensor> SENSORS = Sensor::initializeSensors();
 
+uint32_t Freq = 0;
+
 void setup() {
   Serial.begin(115200);
+  Freq = getCpuFrequencyMhz();
+  Serial.print("CPU Freq = ");
+  Serial.print(Freq);
+  Serial.println(" MHz");
   Wire.begin();
   delay(500);
   Serial.println("Initializing IMU...");
@@ -49,8 +55,6 @@ void setup() {
   Serial.println("Initializing Bluetooth...");
 
   BLEMidiServer.begin("Le tuts controller");
-
-  // Serial.println("Sensors ready ʕノ•ᴥ•ʔノ");
 
   Serial.println("Sensors ready (:");
 }

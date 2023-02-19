@@ -40,7 +40,7 @@ int16_t Sensor::getFloor(std::string &type) {
     { "gx", 50 },
     { "gy", 50 },
     { "gz", 50 },
-    { "infrared", 70 },
+    { "infrared", 80 },
   };
   return floorValues[type];
 }
@@ -148,35 +148,40 @@ int16_t Sensor::getRawValue(MPU6050 &accelgyro, Adafruit_VL53L0X &lox) {
 
   if (_sensorType == "ax") {
     const int16_t rawValue = accelgyro.getAccelerationX();
-    return constrain(rawValue, 0, 15500);
+    return constrain(rawValue, 0, _ceil);
   }
 
   if (_sensorType == "ay") {
     const int16_t rawValue = accelgyro.getAccelerationY();
-    return constrain(rawValue, 0, 15500);
+    return constrain(rawValue, 0, _ceil);
   }
 
   if (_sensorType == "az") {
     const int16_t rawValue = accelgyro.getAccelerationZ();
-    return constrain(rawValue, 0, 15500);
+    return constrain(rawValue, 0, _ceil);
   }
 
   if (_sensorType == "gx") {
     const int16_t rawValue = accelgyro.getRotationX();
-    return constrain(rawValue, 0, 15500);
+    return constrain(rawValue, 0, _ceil);
   }
 
   if (_sensorType == "gy") {
     const int16_t rawValue = accelgyro.getRotationY();
-    return constrain(rawValue, 0, 15500);
+    return constrain(rawValue, 0, _ceil);
   }
 
   if (_sensorType == "gz") {
     const int16_t rawValue = accelgyro.getRotationZ();
-    return constrain(rawValue, 0, 15500);
+    return constrain(rawValue, 0, _ceil);
   }
 
   return 0;
+}
+
+
+int16_t Sensor::runNonBlockingAverageFilter() {
+  return this->dataBuffer / _threshold;
 }
 
 // int16_t Sensor::runBlockingAverageFilter(int measureSize, MPU6050 &accelgyro, int gap) {
@@ -192,10 +197,6 @@ int16_t Sensor::getRawValue(MPU6050 &accelgyro, Adafruit_VL53L0X &lox) {
 //   const int16_t result = buffer / measureSize;
 //   return result;
 // }
-
-int16_t Sensor::runNonBlockingAverageFilter() {
-  return this->dataBuffer / _threshold;
-}
 
 // int16_t Sensor::runExponentialFilter(int measureSize, MPU6050 &accelgyro, float alpha) {
 //   const int16_t rawValue = this->getRawValue(accelgyro);
@@ -295,25 +296,6 @@ void Sensor::sendSerialMidiMessage() {
 // _floor = getValueFromMapObject(floorValues, _sensorType);
 // _ceil = getValueFromMapObject(ceilValues, _sensorType);
 // _threshold = getValueFromMapObject(thresholdValues, _sensorType);
-
-/**
-  * The pulseIn method used by the maxsonar sensor (pwPin) waits for a timeout,
-  * Meaning is blocking and will generate unexpected delays related to all the other sensors.
-  * Analog doesn't seem to be very precise, but it will be used for now.
-  * TODO: Test UART communication with the max sonar and the esp32 | stm32
-  **/
-
-// if (_sensorType == "sonar") {
-//   const unsigned long pulse = pulseIn(_pin, HIGH, 5000);
-//   return pulse / 147;
-// }
-
-// int Sensor::runKalmanFilter(Kalman kalmanFilterInstance) {
-//   const int16_t rawValue = this->getRawValue(accelgyro);
-//   const float filteredFloatValue = kalman.filter(sensorValue);
-//   const int filteredIntValue = int(filteredFloatValue);
-//   return filteredIntValue
-// }
 
 // std::vector< uint8_t > Sensor::getValuesBetweenRanges(uint8_t gap) {
 //   uint8_t samples = 1;

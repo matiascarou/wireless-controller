@@ -73,12 +73,12 @@ public:
 
   static std::vector<Sensor> initializeSensors() {
     const static std::vector<Sensor> SENSORS = {
-      Sensor("potentiometer", 102, A0),
-      Sensor("potentiometer", 103, A3),
-      Sensor("force", 104, A6),
-      Sensor("ax", 105, 0, 5),
-      Sensor("ay", 106, 0, 19),
-      Sensor("infrared", 108, 0, 18),
+      Sensor("potentiometer", 102, 15),
+      Sensor("potentiometer", 103, 2),
+      Sensor("force", 104, 4),
+      Sensor("ax", 105, 0, 19),
+      Sensor("ay", 106, 0, 5),
+      Sensor("infrared", 108, 0, 17),
     };
     return SENSORS;
     /**
