@@ -74,7 +74,7 @@ public:
   static std::vector<Sensor> initializeSensors() {
     const static std::vector<Sensor> SENSORS = {
       Sensor("potentiometer", 102, 15),
-      Sensor("potentiometer", 103, 2),
+      Sensor("potentiometer", 103, 36),
       Sensor("force", 104, 4),
       Sensor("ax", 105, 0, 19),
       Sensor("ay", 106, 0, 5),

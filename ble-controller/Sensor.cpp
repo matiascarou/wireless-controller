@@ -32,7 +32,7 @@ int16_t Sensor::getFilterThreshold(std::string &type) {
 int16_t Sensor::getFloor(std::string &type) {
   static std::map<std::string, int> floorValues = {
     { "potentiometer", 20 },
-    { "force", 60 },
+    { "force", 450 },
     { "sonar", 50 },
     { "ax", 50 },
     { "ay", 50 },
