@@ -270,7 +270,33 @@ void Sensor::sendBleMidiMessage(BLEMidiServerClass &serverInstance) {
       }
     }
   }
+  // if (_midiMessage == "pitchBend") {
+  //   if (this->toggleStatus != this->previousToggleStatus) {
+  //     if (this->toggleStatus) {
+  //       serverInstance.pitchBend(_channel, uint8_t lsb, uint8_t msb);
+  //     } else {
+  //       serverInstance.pitchBend(_channel, uint8_t lsb, uint8_t msb);
+  //     }
+  //   }
+  // }
 }
+
+// void Sensor::sendNewBleMiddiMessage(BLEMidiServerClass &serverInstance) {
+//   if (_midiMessage == "controlChange") {
+//     if (this->currentValue != this->previousValue) {
+//       serverInstance.controlChange(_channel, _controllerNumber, char(this->currentValue));
+//     }
+//   }
+//   if (_midiMessage == "gate") {
+//     if (this->toggleStatus != this->previousToggleStatus) {
+//       if (this->toggleStatus) {
+//         serverInstance.noteOn(_channel, char(60), char(127));
+//       } else {
+//         serverInstance.noteOff(_channel, char(60), char(127));
+//       }
+//     }
+//   }
+// }
 
 void Sensor::sendSerialMidiMessage() {
   if (_midiMessage == "controlChange") {

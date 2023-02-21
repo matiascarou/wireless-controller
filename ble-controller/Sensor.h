@@ -97,6 +97,15 @@ public:
     //   };
     //   return SENSORS;
   }
+
+  static bool isPitchButtonActive(bool &currentButtonState, bool &lastButtonState, bool &toggleStatus, const uint8_t &PITCH_BEND_BUTTON) {
+    currentButtonState = !!digitalRead(PITCH_BEND_BUTTON);
+    if (currentButtonState && !lastButtonState) {
+      toggleStatus = !toggleStatus ? true : false;
+    }
+    lastButtonState = currentButtonState;
+    return toggleStatus;
+  }
 };
 
 
