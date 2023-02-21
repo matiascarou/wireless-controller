@@ -33,7 +33,9 @@ void setup() {
   // Serial.print("CPU Freq is ");
   // Serial.print(Freq);
   // Serial.println(" MHz");
-  // Wire.begin();
+  Wire.begin();
+  delay(500);
+  accelgyro.initialize();
 
   analogReadResolution(10);
 
@@ -42,18 +44,15 @@ void setup() {
   pinMode(PITCH_BEND_BUTTON, INPUT);
   pinMode(PITCH_BEND_LED, OUTPUT);
 
-  if (!lox.begin()) {
-    Serial.println(F("Failed to boot VL53L0X"));
-    digitalWrite(ERROR_LED, HIGH);
-  }
-
-  delay(500);
-  accelgyro.initialize();
-
   if (accelgyro.testConnection()) {
     Serial.println("Succesfully connected to IMU!");
   } else {
     Serial.println("There was a problem with the IMU initialization");
+    digitalWrite(ERROR_LED, HIGH);
+  }
+
+  if (!lox.begin()) {
+    Serial.println(F("Failed to boot VL53L0X"));
     digitalWrite(ERROR_LED, HIGH);
   }
 
