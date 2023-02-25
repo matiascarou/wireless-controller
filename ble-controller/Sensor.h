@@ -15,7 +15,6 @@ private:
   bool isActive;
   bool toggleStatus;
   bool previousToggleStatus;
-  std::string _midiMessage;
   bool isAlreadyPressed;
   unsigned long dataBuffer;
   uint16_t _debounceThreshold;
@@ -28,9 +27,12 @@ private:
   int16_t getFilterThreshold(std::string &type);
   int16_t getCeil(std::string &type);
   uint16_t getDebounceThreshold(std::string &type);
+  byte msb = 0;
+  byte lsb = 0;
 public:
   Sensor(const std::string &sensorType, const uint8_t &controllerNumber, const uint8_t &pin = 0, const uint8_t &intPin = 0);
   std::string _sensorType;
+  std::string _midiMessage;
   uint8_t filteredExponentialValue;
   uint8_t _pin;
   uint8_t _intPin;
@@ -59,6 +61,14 @@ public:
   void sendSerialMidiMessage();
   void setMidiChannel(uint8_t channel);
   void debounce(MPU6050 &accelgyro, Adafruit_VL53L0X &lox);
+  // Sensor getSensorBySensorType(std::vector<Sensor> &SENSORS, std::string sensorType);
+  static Sensor getSensorBySensorType(std::vector<Sensor> &SENSORS, std::string sensorType) {
+    for (Sensor SENSOR : SENSORS) {
+      if (SENSOR._sensorType == sensorType) {
+        return SENSOR;
+      }
+    }
+  }
 
   static void setUpSensorPins(std::vector<Sensor> &SENSORS) {
     for (Sensor SENSOR : SENSORS) {
@@ -97,6 +107,7 @@ public:
     //   };
     //   return SENSORS;
   }
+
 
   static bool isPitchButtonActive(bool &currentButtonState, bool &lastButtonState, bool &toggleStatus, const uint8_t &PITCH_BEND_BUTTON) {
     currentButtonState = !!digitalRead(PITCH_BEND_BUTTON);

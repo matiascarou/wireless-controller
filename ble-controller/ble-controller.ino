@@ -27,13 +27,14 @@ Adafruit_VL53L0X lox = Adafruit_VL53L0X();
 std::vector<Sensor> SENSORS = Sensor::initializeSensors();
 
 void setup() {
+  delay(100);
   Serial.begin(115200);
+  Wire.begin();
   setCpuFrequencyMhz(160);
   // const uint32_t Freq = getCpuFrequencyMhz();
   // Serial.print("CPU Freq is ");
   // Serial.print(Freq);
   // Serial.println(" MHz");
-  Wire.begin();
   delay(500);
   accelgyro.initialize();
 
@@ -50,6 +51,8 @@ void setup() {
     Serial.println("There was a problem with the IMU initialization");
     digitalWrite(ERROR_LED, HIGH);
   }
+
+  delay(1000);
 
   if (!lox.begin()) {
     Serial.println(F("Failed to boot VL53L0X"));
@@ -80,8 +83,13 @@ void loop() {
     const bool isBendActive = Sensor::isPitchButtonActive(currentButtonState, lastButtonState, toggleStatus, PITCH_BEND_BUTTON);
     if (isBendActive) {
       digitalWrite(PITCH_BEND_LED, HIGH);
+      Sensor infraredSensor = Sensor::getSensorBySensorType(SENSORS, "infrared");
+      infraredSensor.setMidiMessage("pitchBend");
+      Serial.println(infraredSensor._midiMessage.c_str());
     } else {
       digitalWrite(PITCH_BEND_LED, LOW);
+      Sensor infraredSensor = Sensor::getSensorBySensorType(SENSORS, "infrared");
+      infraredSensor.setMidiMessage("controlChange");
     }
     for (Sensor& SENSOR : SENSORS) {
       if (SENSOR.isSwitchActive()) {
@@ -89,6 +97,10 @@ void loop() {
         SENSOR.setPreviousRawValue(rawValue);
         SENSOR.setDataBuffer(rawValue);
         if (SENSOR.isAboveThreshold()) {
+          if (SENSOR._sensorType == "infrared") {
+            Serial.print("Midi message is: ");
+            Serial.println(SENSOR._midiMessage.c_str());
+          }
           const unsigned long currentDebounceValue = millis();
           SENSOR.setCurrentDebounceValue(currentDebounceValue);
           const int16_t averageValue = SENSOR.runNonBlockingAverageFilter();

@@ -23,7 +23,7 @@ int16_t Sensor::getFilterThreshold(std::string &type) {
     { "gx", 40 },
     { "gy", 40 },
     { "gz", 40 },
-    { "infrared", 1 },
+    { "infrared", 2 },
   };
   return filterThresholdValues[type];
 }
@@ -32,7 +32,7 @@ int16_t Sensor::getFilterThreshold(std::string &type) {
 int16_t Sensor::getFloor(std::string &type) {
   static std::map<std::string, int> floorValues = {
     { "potentiometer", 20 },
-    { "force", 450 },
+    { "force", 100 },
     { "sonar", 50 },
     { "ax", 50 },
     { "ay", 50 },
@@ -61,6 +61,12 @@ int16_t Sensor::getCeil(std::string &type) {
   return ceilValues[type];
 }
 
+static std::map<std::string, std::string> midiMessages = {
+  { "controlChange", "controlChange" },
+  { "gate", "gate" },
+  { "pitchBend", "pitchBend" },
+};
+
 Sensor::Sensor(const std::string &sensorType, const uint8_t &controllerNumber, const uint8_t &pin, const uint8_t &intPin) {
   _pin = pin;
   _controllerNumber = char(controllerNumber);
@@ -85,6 +91,8 @@ Sensor::Sensor(const std::string &sensorType, const uint8_t &controllerNumber, c
   _ceil = Sensor::getCeil(_sensorType);
   _threshold = Sensor::getFilterThreshold(_sensorType);
   _debounceThreshold = Sensor::getDebounceThreshold(_sensorType);
+  msb = 0;
+  lsb = 0;
   // filters = Filter(this, accelgyro)
 }
 
@@ -230,6 +238,13 @@ uint8_t Sensor::getMappedMidiValue(int16_t actualValue, int floor, int ceil) {
   if (floor && ceil) {
     return constrain(map(actualValue, floor, ceil, 0, 127), 0, 127);
   }
+  if (this->_midiMessage == "pitchBend") {
+    const int pitchBendValue = constrain(map(actualValue, 0, 1023, 0, 16383), 0, 16383);
+    int shiftedValue = pitchBendValue << 1;
+    this->msb = highByte(shiftedValue);
+    this->lsb = lowByte(shiftedValue) >> 1;
+    return pitchBendValue;
+  }
   return constrain(map(actualValue, _floor, _ceil, 0, 127), 0, 127);
 }
 
@@ -256,12 +271,12 @@ void Sensor::debounce(MPU6050 &accelgyro, Adafruit_VL53L0X &lox) {
 }
 
 void Sensor::sendBleMidiMessage(BLEMidiServerClass &serverInstance) {
-  if (_midiMessage == "controlChange") {
+  if (this->_midiMessage == "controlChange") {
     if (this->currentValue != this->previousValue) {
       serverInstance.controlChange(_channel, _controllerNumber, char(this->currentValue));
     }
   }
-  if (_midiMessage == "gate") {
+  if (this->_midiMessage == "gate") {
     if (this->toggleStatus != this->previousToggleStatus) {
       if (this->toggleStatus) {
         serverInstance.noteOn(_channel, char(60), char(127));
@@ -270,15 +285,10 @@ void Sensor::sendBleMidiMessage(BLEMidiServerClass &serverInstance) {
       }
     }
   }
-  // if (_midiMessage == "pitchBend") {
-  //   if (this->toggleStatus != this->previousToggleStatus) {
-  //     if (this->toggleStatus) {
-  //       serverInstance.pitchBend(_channel, uint8_t lsb, uint8_t msb);
-  //     } else {
-  //       serverInstance.pitchBend(_channel, uint8_t lsb, uint8_t msb);
-  //     }
-  //   }
-  // }
+  if (this->_midiMessage == "pitchBend") {
+    Serial.println("Im entering!!!");
+    serverInstance.pitchBend(_channel, this->lsb, this->msb);
+  }
 }
 
 // void Sensor::sendNewBleMiddiMessage(BLEMidiServerClass &serverInstance) {
