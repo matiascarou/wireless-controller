@@ -6,7 +6,7 @@
 
 uint16_t Sensor::getDebounceThreshold(std::string &type) {
   static std::map<std::string, int> debounceThresholdValues = {
-    { "force", 30 },
+    { "force", 10 },
     { "sonar", 100 },
   };
   return debounceThresholdValues[type];
@@ -32,7 +32,7 @@ int16_t Sensor::getFilterThreshold(std::string &type) {
 int16_t Sensor::getFloor(std::string &type) {
   static std::map<std::string, int> floorValues = {
     { "potentiometer", 20 },
-    { "force", 100 },
+    { "force", 50 },
     { "sonar", 50 },
     { "ax", 50 },
     { "ay", 50 },
@@ -234,7 +234,7 @@ std::vector< uint8_t > Sensor::getValuesBetweenRanges(uint8_t gap) {
   return steps;
 }
 
-uint8_t Sensor::getMappedMidiValue(int16_t actualValue, int floor, int ceil) {
+int Sensor::getMappedMidiValue(int16_t actualValue, int floor, int ceil) {
   if (floor && ceil) {
     return constrain(map(actualValue, floor, ceil, 0, 127), 0, 127);
   }
@@ -286,7 +286,6 @@ void Sensor::sendBleMidiMessage(BLEMidiServerClass &serverInstance) {
     }
   }
   if (this->_midiMessage == "pitchBend") {
-    Serial.println("Im entering!!!");
     serverInstance.pitchBend(_channel, this->lsb, this->msb);
   }
 }

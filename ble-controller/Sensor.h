@@ -42,7 +42,7 @@ public:
   int16_t filteredValue;
   bool isSwitchActive();
   bool isAboveThreshold();
-  uint8_t getMappedMidiValue(int16_t actualValue, int floor = 0, int ceil = 0);
+  int getMappedMidiValue(int16_t actualValue, int floor = 0, int ceil = 0);
   int16_t getRawValue(MPU6050 &accelgyro, Adafruit_VL53L0X &lox);
   int16_t runNonBlockingAverageFilter();
   // int16_t runBlockingAverageFilter(int measureSize, MPU6050 &accelgyro, int gap = 1);
@@ -61,13 +61,15 @@ public:
   void sendSerialMidiMessage();
   void setMidiChannel(uint8_t channel);
   void debounce(MPU6050 &accelgyro, Adafruit_VL53L0X &lox);
-  // Sensor getSensorBySensorType(std::vector<Sensor> &SENSORS, std::string sensorType);
-  static Sensor getSensorBySensorType(std::vector<Sensor> &SENSORS, std::string sensorType) {
-    for (Sensor SENSOR : SENSORS) {
+
+  static Sensor &getSensorBySensorType(std::vector<Sensor> &SENSORS, std::string sensorType) {
+    for (Sensor &SENSOR : SENSORS) {
       if (SENSOR._sensorType == sensorType) {
         return SENSOR;
       }
     }
+    const std::string errorMessage = "Sensor " + sensorType + " not found";
+    Serial.println(errorMessage.c_str());
   }
 
   static void setUpSensorPins(std::vector<Sensor> &SENSORS) {

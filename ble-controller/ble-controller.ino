@@ -30,12 +30,11 @@ void setup() {
   delay(100);
   Serial.begin(115200);
   Wire.begin();
-  setCpuFrequencyMhz(160);
-  // const uint32_t Freq = getCpuFrequencyMhz();
+  setCpuFrequencyMhz(240);
+  const uint32_t Freq = getCpuFrequencyMhz();
   // Serial.print("CPU Freq is ");
   // Serial.print(Freq);
   // Serial.println(" MHz");
-  delay(500);
   accelgyro.initialize();
 
   analogReadResolution(10);
@@ -52,12 +51,14 @@ void setup() {
     digitalWrite(ERROR_LED, HIGH);
   }
 
-  delay(1000);
+  delay(100);
 
   if (!lox.begin()) {
     Serial.println(F("Failed to boot VL53L0X"));
     digitalWrite(ERROR_LED, HIGH);
   }
+
+  delay(100);
 
   Serial.println("Initializing Bluetooth...");
 
@@ -83,12 +84,13 @@ void loop() {
     const bool isBendActive = Sensor::isPitchButtonActive(currentButtonState, lastButtonState, toggleStatus, PITCH_BEND_BUTTON);
     if (isBendActive) {
       digitalWrite(PITCH_BEND_LED, HIGH);
-      Sensor infraredSensor = Sensor::getSensorBySensorType(SENSORS, "infrared");
+      Sensor& infraredSensor = Sensor::getSensorBySensorType(SENSORS, "infrared");
+      infraredSensor.setThreshold(1);
       infraredSensor.setMidiMessage("pitchBend");
-      Serial.println(infraredSensor._midiMessage.c_str());
     } else {
       digitalWrite(PITCH_BEND_LED, LOW);
-      Sensor infraredSensor = Sensor::getSensorBySensorType(SENSORS, "infrared");
+      Sensor& infraredSensor = Sensor::getSensorBySensorType(SENSORS, "infrared");
+      infraredSensor.setThreshold(2);
       infraredSensor.setMidiMessage("controlChange");
     }
     for (Sensor& SENSOR : SENSORS) {
@@ -97,9 +99,9 @@ void loop() {
         SENSOR.setPreviousRawValue(rawValue);
         SENSOR.setDataBuffer(rawValue);
         if (SENSOR.isAboveThreshold()) {
-          if (SENSOR._sensorType == "infrared") {
-            Serial.print("Midi message is: ");
-            Serial.println(SENSOR._midiMessage.c_str());
+          if (SENSOR._sensorType == "force") {
+            Serial.print("Force sensor raw value: ");
+            Serial.println(rawValue);
           }
           const unsigned long currentDebounceValue = millis();
           SENSOR.setCurrentDebounceValue(currentDebounceValue);
