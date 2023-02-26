@@ -27,8 +27,8 @@ private:
   int16_t getFilterThreshold(std::string &type);
   int16_t getCeil(std::string &type);
   uint16_t getDebounceThreshold(std::string &type);
-  byte msb = 0;
-  byte lsb = 0;
+  uint8_t msb = 0;
+  uint8_t lsb = 0;
 public:
   Sensor(const std::string &sensorType, const uint8_t &controllerNumber, const uint8_t &pin = 0, const uint8_t &intPin = 0);
   std::string _sensorType;
@@ -45,8 +45,8 @@ public:
   int getMappedMidiValue(int16_t actualValue, int floor = 0, int ceil = 0);
   int16_t getRawValue(MPU6050 &accelgyro, Adafruit_VL53L0X &lox);
   int16_t runNonBlockingAverageFilter();
-  // int16_t runBlockingAverageFilter(int measureSize, MPU6050 &accelgyro, int gap = 1);
-  // int16_t runExponentialFilter(int measureSize, MPU6050 &accelgyro, float alpha = 0.2);
+  int16_t runBlockingAverageFilter(int measureSize, MPU6050 &accelgyro, Adafruit_VL53L0X &lox, int gap = 500);
+  int16_t runExponentialFilter(int measureSize, MPU6050 &accelgyro, Adafruit_VL53L0X &lox, float alpha = 0.2);
   std::vector< uint8_t > getValuesBetweenRanges(uint8_t gap = 1);
   void setCurrentDebounceValue(unsigned long timeValue);
   void setCurrentValue(uint8_t value);

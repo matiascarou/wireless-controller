@@ -78,18 +78,22 @@ bool currentButtonState = false;
 bool lastButtonState = false;
 bool toggleStatus = false;
 
+bool pitchBendLedState = false;
+
 void loop() {
   currentTime = millis();
   if (BLEMidiServer.isConnected()) {
     const bool isBendActive = Sensor::isPitchButtonActive(currentButtonState, lastButtonState, toggleStatus, PITCH_BEND_BUTTON);
-    if (isBendActive) {
-      digitalWrite(PITCH_BEND_LED, HIGH);
-      Sensor& infraredSensor = Sensor::getSensorBySensorType(SENSORS, "infrared");
+    Sensor& infraredSensor = Sensor::getSensorBySensorType(SENSORS, "infrared");
+    if (isBendActive && !pitchBendLedState) {
+      pitchBendLedState = true;
+      digitalWrite(PITCH_BEND_LED, pitchBendLedState);
       infraredSensor.setThreshold(1);
       infraredSensor.setMidiMessage("pitchBend");
-    } else {
-      digitalWrite(PITCH_BEND_LED, LOW);
-      Sensor& infraredSensor = Sensor::getSensorBySensorType(SENSORS, "infrared");
+    }
+    if (!isBendActive && pitchBendLedState) {
+      pitchBendLedState = false;
+      digitalWrite(PITCH_BEND_LED, pitchBendLedState);
       infraredSensor.setThreshold(2);
       infraredSensor.setMidiMessage("controlChange");
     }
@@ -99,10 +103,10 @@ void loop() {
         SENSOR.setPreviousRawValue(rawValue);
         SENSOR.setDataBuffer(rawValue);
         if (SENSOR.isAboveThreshold()) {
-          if (SENSOR._sensorType == "force") {
-            Serial.print("Force sensor raw value: ");
-            Serial.println(rawValue);
-          }
+          // if (SENSOR._sensorType == "force") {
+          //   Serial.print("Force sensor raw value: ");
+          //   Serial.println(rawValue);
+          // }
           const unsigned long currentDebounceValue = millis();
           SENSOR.setCurrentDebounceValue(currentDebounceValue);
           const int16_t averageValue = SENSOR.runNonBlockingAverageFilter();

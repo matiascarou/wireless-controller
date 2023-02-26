@@ -32,7 +32,7 @@ int16_t Sensor::getFilterThreshold(std::string &type) {
 int16_t Sensor::getFloor(std::string &type) {
   static std::map<std::string, int> floorValues = {
     { "potentiometer", 20 },
-    { "force", 50 },
+    { "force", 80 },
     { "sonar", 50 },
     { "ax", 50 },
     { "ay", 50 },
@@ -192,25 +192,25 @@ int16_t Sensor::runNonBlockingAverageFilter() {
   return this->dataBuffer / _threshold;
 }
 
-// int16_t Sensor::runBlockingAverageFilter(int measureSize, MPU6050 &accelgyro, int gap) {
-//   int buffer = 0;
-//   for (int i = 0; i < measureSize; i++) {
-//     int16_t value = this->getRawValue(accelgyro);
-//     if (value < 0) {
-//       value = 0;
-//     }
-//     buffer += value;
-//     delayMicroseconds(gap);
-//   }
-//   const int16_t result = buffer / measureSize;
-//   return result;
-// }
+int16_t Sensor::runBlockingAverageFilter(int measureSize, MPU6050 &accelgyro, Adafruit_VL53L0X &lox, int gap) {
+  int buffer = 0;
+  for (int i = 0; i < measureSize; i++) {
+    int16_t value = this->getRawValue(accelgyro, lox);
+    if (value < 0) {
+      value = 0;
+    }
+    buffer += value;
+    delayMicroseconds(gap);
+  }
+  const int16_t result = buffer / measureSize;
+  return result;
+}
 
-// int16_t Sensor::runExponentialFilter(int measureSize, MPU6050 &accelgyro, float alpha) {
-//   const int16_t rawValue = this->getRawValue(accelgyro);
-//   this->filteredExponentialValue = (alpha * rawValue) + (1 - alpha) * this->filteredExponentialValue;
-//   return this->filteredExponentialValue;
-// }
+int16_t Sensor::runExponentialFilter(int measureSize, MPU6050 &accelgyro, Adafruit_VL53L0X &lox, float alpha) {
+  const int16_t rawValue = this->getRawValue(accelgyro, lox);
+  this->filteredExponentialValue = (alpha * rawValue) + (1 - alpha) * this->filteredExponentialValue;
+  return this->filteredExponentialValue;
+}
 
 std::vector< uint8_t > Sensor::getValuesBetweenRanges(uint8_t gap) {
   uint8_t samples = 1;
@@ -286,26 +286,11 @@ void Sensor::sendBleMidiMessage(BLEMidiServerClass &serverInstance) {
     }
   }
   if (this->_midiMessage == "pitchBend") {
-    serverInstance.pitchBend(_channel, this->lsb, this->msb);
+    if (this->currentValue != this->previousValue) {
+      serverInstance.pitchBend(_channel, this->lsb, this->msb);
+    }
   }
 }
-
-// void Sensor::sendNewBleMiddiMessage(BLEMidiServerClass &serverInstance) {
-//   if (_midiMessage == "controlChange") {
-//     if (this->currentValue != this->previousValue) {
-//       serverInstance.controlChange(_channel, _controllerNumber, char(this->currentValue));
-//     }
-//   }
-//   if (_midiMessage == "gate") {
-//     if (this->toggleStatus != this->previousToggleStatus) {
-//       if (this->toggleStatus) {
-//         serverInstance.noteOn(_channel, char(60), char(127));
-//       } else {
-//         serverInstance.noteOff(_channel, char(60), char(127));
-//       }
-//     }
-//   }
-// }
 
 void Sensor::sendSerialMidiMessage() {
   if (_midiMessage == "controlChange") {
@@ -327,6 +312,23 @@ void Sensor::sendSerialMidiMessage() {
     }
   }
 }
+
+// void Sensor::sendNewBleMiddiMessage(BLEMidiServerClass &serverInstance) {
+//   if (_midiMessage == "controlChange") {
+//     if (this->currentValue != this->previousValue) {
+//       serverInstance.controlChange(_channel, _controllerNumber, char(this->currentValue));
+//     }
+//   }
+//   if (_midiMessage == "gate") {
+//     if (this->toggleStatus != this->previousToggleStatus) {
+//       if (this->toggleStatus) {
+//         serverInstance.noteOn(_channel, char(60), char(127));
+//       } else {
+//         serverInstance.noteOff(_channel, char(60), char(127));
+//       }
+//     }
+//   }
+// }
 
 // _floor = getValueFromMapObject(floorValues, _sensorType);
 // _ceil = getValueFromMapObject(ceilValues, _sensorType);
