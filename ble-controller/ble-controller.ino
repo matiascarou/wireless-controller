@@ -90,6 +90,10 @@ void loop() {
     for (Sensor& SENSOR : SENSORS) {
       if (SENSOR.isSwitchActive()) {
         int16_t rawValue = SENSOR.getRawValue(accelgyro, lox);
+        if (SENSOR._sensorType == "infrared") {
+          Serial.print("sensor raw value: ");
+          Serial.println(rawValue);
+        }
         SENSOR.setPreviousRawValue(rawValue);
         SENSOR.setDataBuffer(rawValue);
         if (SENSOR.isAboveThreshold()) {
@@ -111,8 +115,3 @@ void loop() {
   // printTotalLoopRuntime(currentTime, previousTime);
   delay(1);
 }
-
-// if (SENSOR._sensorType == "force") {
-//   Serial.print("Force sensor raw value: ");
-//   Serial.println(rawValue);
-// }

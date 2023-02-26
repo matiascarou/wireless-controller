@@ -150,7 +150,7 @@ int16_t Sensor::getRawValue(MPU6050 &accelgyro, Adafruit_VL53L0X &lox) {
 
     lox.rangingTest(&measure, false);
 
-    return measure.RangeStatus != 4 ? measure.RangeMilliMeter : this->previousRawValue;
+    return measure.RangeStatus != 4 && measure.RangeMilliMeter >= _floor ? measure.RangeMilliMeter : this->previousRawValue;
   }
 
 
@@ -239,7 +239,7 @@ int Sensor::getMappedMidiValue(int16_t actualValue, int floor, int ceil) {
     return constrain(map(actualValue, floor, ceil, 0, 127), 0, 127);
   }
   if (this->_midiMessage == "pitchBend") {
-    const int pitchBendValue = constrain(map(actualValue, 0, 1023, 0, 16383), 0, 16383);
+    const int pitchBendValue = constrain(map(actualValue, _floor, _ceil, 0, 16383), 0, 16383);
     int shiftedValue = pitchBendValue << 1;
     this->msb = highByte(shiftedValue);
     this->lsb = lowByte(shiftedValue) >> 1;

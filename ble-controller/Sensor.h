@@ -129,7 +129,7 @@ public:
 
   static void runPitchBendLogic(Sensor &infraredSensor, const bool &isBendActive, bool &pitchBendLedState, const uint8_t &PITCH_BEND_LED) {
     if (isBendActive && !pitchBendLedState) {
-      setInfraredSensorStates(infraredSensor, pitchBendLedState, 1, "pitchBend", true, PITCH_BEND_LED);
+      setInfraredSensorStates(infraredSensor, pitchBendLedState, 2, "pitchBend", true, PITCH_BEND_LED);
     }
     if (!isBendActive && pitchBendLedState) {
       setInfraredSensorStates(infraredSensor, pitchBendLedState, 2, "controlChange", false, PITCH_BEND_LED);
