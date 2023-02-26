@@ -119,6 +119,22 @@ public:
     lastButtonState = currentButtonState;
     return toggleStatus;
   }
+
+  static void setInfraredSensorStates(Sensor &infraredSensor, bool &pitchBendLedState, int16_t thresholdValue, std::string midiMessage, bool newLedState, const uint8_t &PITCH_BEND_LED) {
+    pitchBendLedState = newLedState;
+    digitalWrite(PITCH_BEND_LED, pitchBendLedState);
+    infraredSensor.setThreshold(thresholdValue);
+    infraredSensor.setMidiMessage(midiMessage);
+  }
+
+  static void runPitchBendLogic(Sensor &infraredSensor, const bool &isBendActive, bool &pitchBendLedState, const uint8_t &PITCH_BEND_LED) {
+    if (isBendActive && !pitchBendLedState) {
+      setInfraredSensorStates(infraredSensor, pitchBendLedState, 1, "pitchBend", true, PITCH_BEND_LED);
+    }
+    if (!isBendActive && pitchBendLedState) {
+      setInfraredSensorStates(infraredSensor, pitchBendLedState, 2, "controlChange", false, PITCH_BEND_LED);
+    }
+  }
 };
 
 
