@@ -18,7 +18,8 @@ void printTotalLoopRuntime(unsigned long current, unsigned long& previous) {
 **/
 #define PITCH_BEND_BUTTON 32
 #define PITCH_BEND_LED 18
-#define ERROR_LED 2
+
+const uint8_t ERROR_LED = 2;
 
 MPU6050 accelgyro;
 
@@ -45,25 +46,19 @@ void setup() {
   pinMode(PITCH_BEND_BUTTON, INPUT);
   pinMode(PITCH_BEND_LED, OUTPUT);
 
-  if (accelgyro.testConnection()) {
-    Serial.println("Succesfully connected to IMU!");
-  } else {
-    Serial.println("There was a problem with the IMU initialization");
-    digitalWrite(ERROR_LED, HIGH);
-  }
+  Sensor::testAccelgiroConnection(accelgyro);
 
   delay(100);
 
-  if (!lox.begin()) {
-    Serial.println(F("Failed to boot VL53L0X"));
-    digitalWrite(ERROR_LED, HIGH);
-  }
+  Sensor::testInfraredSensorConnection(lox);
 
   delay(100);
 
   Serial.println("Initializing Bluetooth...");
 
   BLEMidiServer.begin("Le tuts controller");
+
+  delay(100);
 
   /**
   * Disable wifi, makes sense?

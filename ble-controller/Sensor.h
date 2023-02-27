@@ -6,6 +6,8 @@
 #include "Adafruit_VL53L0X.h"
 // #include "Filter.h"
 
+extern const uint8_t ERROR_LED;
+
 class Sensor {
 private:
   char _controllerNumber;
@@ -129,10 +131,26 @@ public:
 
   static void runPitchBendLogic(Sensor &infraredSensor, const bool &isBendActive, bool &pitchBendLedState, const uint8_t &PITCH_BEND_LED) {
     if (isBendActive && !pitchBendLedState) {
-      setInfraredSensorStates(infraredSensor, pitchBendLedState, 2, "pitchBend", true, PITCH_BEND_LED);
+      setInfraredSensorStates(infraredSensor, pitchBendLedState, 1, "pitchBend", true, PITCH_BEND_LED);
     }
     if (!isBendActive && pitchBendLedState) {
       setInfraredSensorStates(infraredSensor, pitchBendLedState, 2, "controlChange", false, PITCH_BEND_LED);
+    }
+  }
+
+  static void testAccelgiroConnection(MPU6050 &accelgyro) {
+    if (accelgyro.testConnection()) {
+      Serial.println("Succesfully connected to IMU!");
+    } else {
+      Serial.println("There was a problem with the IMU initialization");
+      digitalWrite(ERROR_LED, HIGH);
+    }
+  }
+
+  static void testInfraredSensorConnection(Adafruit_VL53L0X &lox) {
+    if (!lox.begin()) {
+      Serial.println(F("Failed to boot VL53L0X"));
+      digitalWrite(ERROR_LED, HIGH);
     }
   }
 };
