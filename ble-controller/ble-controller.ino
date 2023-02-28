@@ -87,10 +87,6 @@ void loop() {
           SENSOR.setCurrentDebounceValue(currentDebounceValue);
           const std::string sensorType = SENSOR.getSensorType();
           int16_t averageValue = sensorType != "infrared" ? SENSOR.runNonBlockingAverageFilter() : SENSOR.runExponentialFilter(accelgyro, lox);
-          if (sensorType == "infrared") {
-            Serial.print("Average value: ");
-            Serial.println(averageValue);
-          }
           const uint8_t sensorMappedValue = SENSOR.getMappedMidiValue(averageValue);
           SENSOR.setPreviousValue(SENSOR.currentValue);
           SENSOR.setCurrentValue(sensorMappedValue);

@@ -319,65 +319,9 @@ void Sensor::sendSerialMidiMessage() {
   }
 }
 
-// void Sensor::sendNewBleMiddiMessage(BLEMidiServerClass &serverInstance) {
-//   if (_midiMessage == "controlChange") {
-//     if (this->currentValue != this->previousValue) {
-//       serverInstance.controlChange(_channel, _controllerNumber, char(this->currentValue));
-//     }
-//   }
-//   if (_midiMessage == "gate") {
-//     if (this->toggleStatus != this->previousToggleStatus) {
-//       if (this->toggleStatus) {
-//         serverInstance.noteOn(_channel, char(60), char(127));
-//       } else {
-//         serverInstance.noteOff(_channel, char(60), char(127));
-//       }
-//     }
-//   }
-// }
-
 // _floor = getValueFromMapObject(floorValues, _sensorType);
 // _ceil = getValueFromMapObject(ceilValues, _sensorType);
 // _threshold = getValueFromMapObject(thresholdValues, _sensorType);
-
-// std::vector< uint8_t > Sensor::getValuesBetweenRanges(uint8_t gap) {
-//   uint8_t samples = 1;
-//   if (currentValue > previousValue) {
-//     samples = currentValue - previousValue;
-//   }
-//   if (currentValue < previousValue) {
-//     samples = previousValue - currentValue;
-//   }
-//   std::vector< uint8_t > steps(samples / gap);
-//   uint8_t startValue = previousValue;
-//   uint8_t increment = currentValue > previousValue ? gap : -gap;
-//   if (gap > 1) {
-//     std::generate(steps.begin(), steps.end(), [startValue, increment]() mutable {
-//       uint8_t value = startValue;
-//       startValue += increment;
-//       // TODO: Make this better
-//       if (value >= 124) {
-//         return (uint8_t)127;
-//       }
-//       if (value <= 2) {
-//         return (uint8_t)0;
-//       }
-//       return value;
-//     });
-//     return steps;
-//   } else {
-//     std::generate(steps.begin(), steps.end(), [&startValue, this, &gap]() {
-//       if (this->currentValue > this->previousValue) {
-//         return startValue += gap;
-//       }
-//       if (this->currentValue < this->previousValue) {
-//         return startValue -= gap;
-//       }
-//       return startValue;
-//     });
-//     return steps;
-//   }
-// }
 
 // struct Value {
 //   int16_t floor;
