@@ -4,7 +4,6 @@
 #include "MPU6050.h"
 #include <BLEMidi.h>
 #include "Adafruit_VL53L0X.h"
-// #include "Filter.h"
 
 extern const uint8_t ERROR_LED;
 

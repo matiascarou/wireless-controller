@@ -3,7 +3,6 @@
 #include <BLEMidi.h>
 #include "Adafruit_VL53L0X.h"
 #include <math.h>
-// #include "Filter.h"
 
 uint16_t Sensor::getDebounceThreshold(std::string &type) {
   static std::map<std::string, int> debounceThresholdValues = {
@@ -94,7 +93,6 @@ Sensor::Sensor(const std::string &sensorType, const uint8_t &controllerNumber, c
   _debounceThreshold = Sensor::getDebounceThreshold(_sensorType);
   msb = 0;
   lsb = 0;
-  // filters = Filter(this, accelgyro)
 }
 
 bool Sensor::isSwitchActive() {

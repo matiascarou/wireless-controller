@@ -100,10 +100,5 @@ void loop() {
     }
   }
   // printTotalLoopRuntime(currentTime, previousTime);
-  delay(1);
+  delayMicroseconds(500);
 }
-
-// if (SENSOR._sensorType == "infrared") {
-//   Serial.print("sensor raw value: ");
-//   Serial.println(rawValue);
-// }
