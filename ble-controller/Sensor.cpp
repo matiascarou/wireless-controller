@@ -2,6 +2,7 @@
 #include "MPU6050.h"
 #include <BLEMidi.h>
 #include "Adafruit_VL53L0X.h"
+#include <math.h>
 // #include "Filter.h"
 
 uint16_t Sensor::getDebounceThreshold(std::string &type) {
@@ -32,7 +33,7 @@ int16_t Sensor::getFilterThreshold(std::string &type) {
 int16_t Sensor::getFloor(std::string &type) {
   static std::map<std::string, int> floorValues = {
     { "potentiometer", 20 },
-    { "force", 80 },
+    { "force", 200 },
     { "sonar", 50 },
     { "ax", 50 },
     { "ay", 50 },
@@ -40,7 +41,7 @@ int16_t Sensor::getFloor(std::string &type) {
     { "gx", 50 },
     { "gy", 50 },
     { "gz", 50 },
-    { "infrared", 80 },
+    { "infrared", 60 },
   };
   return floorValues[type];
 }
@@ -140,6 +141,10 @@ void Sensor::setDataBuffer(int16_t value) {
   this->dataBuffer = !value ? value : this->dataBuffer + value;
 }
 
+std::string Sensor::getSensorType() {
+  return this->_sensorType;
+}
+
 int16_t Sensor::getRawValue(MPU6050 &accelgyro, Adafruit_VL53L0X &lox) {
   if (_sensorType == "potentiometer" || _sensorType == "force" || _sensorType == "sonar") {
     return analogRead(_pin);
@@ -150,7 +155,7 @@ int16_t Sensor::getRawValue(MPU6050 &accelgyro, Adafruit_VL53L0X &lox) {
 
     lox.rangingTest(&measure, false);
 
-    return measure.RangeStatus != 4 && measure.RangeMilliMeter >= _floor ? measure.RangeMilliMeter : this->previousRawValue;
+    return measure.RangeStatus != 4 && measure.RangeMilliMeter >= _floor / 2 ? measure.RangeMilliMeter : this->previousRawValue;
   }
 
 
@@ -206,10 +211,11 @@ int16_t Sensor::runBlockingAverageFilter(int measureSize, MPU6050 &accelgyro, Ad
   return result;
 }
 
-int16_t Sensor::runExponentialFilter(int measureSize, MPU6050 &accelgyro, Adafruit_VL53L0X &lox, float alpha) {
+int16_t Sensor::runExponentialFilter(MPU6050 &accelgyro, Adafruit_VL53L0X &lox) {
+  static const float alpha = 0.2;
   const int16_t rawValue = this->getRawValue(accelgyro, lox);
-  this->filteredExponentialValue = (alpha * rawValue) + (1 - alpha) * this->filteredExponentialValue;
-  return this->filteredExponentialValue;
+  const float filteredValue = rawValue * alpha + (1 - alpha) * rawValue;
+  return int(filteredValue);
 }
 
 std::vector< uint8_t > Sensor::getValuesBetweenRanges(uint8_t gap) {

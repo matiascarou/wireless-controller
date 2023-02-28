@@ -5,7 +5,6 @@
 #include "Wire.h"
 #include "Sensor.h"
 #include "Adafruit_VL53L0X.h"
-// #include "esp_wifi.h"
 
 void printTotalLoopRuntime(unsigned long current, unsigned long& previous) {
   Serial.print("Loop total time: ");
@@ -32,7 +31,7 @@ void setup() {
   Serial.begin(115200);
   Wire.begin();
   setCpuFrequencyMhz(240);
-  const uint32_t Freq = getCpuFrequencyMhz();
+  // const uint32_t Freq = getCpuFrequencyMhz();
   // Serial.print("CPU Freq is ");
   // Serial.print(Freq);
   // Serial.println(" MHz");
@@ -60,10 +59,6 @@ void setup() {
 
   delay(100);
 
-  /**
-  * Disable wifi, makes sense?
-  **/
-  // esp_wifi_stop();
   Serial.println("Sensors ready (:");
 }
 
@@ -85,16 +80,17 @@ void loop() {
     for (Sensor& SENSOR : SENSORS) {
       if (SENSOR.isSwitchActive()) {
         int16_t rawValue = SENSOR.getRawValue(accelgyro, lox);
-        if (SENSOR._sensorType == "infrared") {
-          Serial.print("sensor raw value: ");
-          Serial.println(rawValue);
-        }
         SENSOR.setPreviousRawValue(rawValue);
         SENSOR.setDataBuffer(rawValue);
         if (SENSOR.isAboveThreshold()) {
           const unsigned long currentDebounceValue = millis();
           SENSOR.setCurrentDebounceValue(currentDebounceValue);
-          const int16_t averageValue = SENSOR.runNonBlockingAverageFilter();
+          const std::string sensorType = SENSOR.getSensorType();
+          int16_t averageValue = sensorType != "infrared" ? SENSOR.runNonBlockingAverageFilter() : SENSOR.runExponentialFilter(accelgyro, lox);
+          if (sensorType == "infrared") {
+            Serial.print("Average value: ");
+            Serial.println(averageValue);
+          }
           const uint8_t sensorMappedValue = SENSOR.getMappedMidiValue(averageValue);
           SENSOR.setPreviousValue(SENSOR.currentValue);
           SENSOR.setCurrentValue(sensorMappedValue);
@@ -110,3 +106,8 @@ void loop() {
   // printTotalLoopRuntime(currentTime, previousTime);
   delay(1);
 }
+
+// if (SENSOR._sensorType == "infrared") {
+//   Serial.print("sensor raw value: ");
+//   Serial.println(rawValue);
+// }
