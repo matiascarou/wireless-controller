@@ -319,10 +319,6 @@ void Sensor::sendSerialMidiMessage() {
   }
 }
 
-// _floor = getValueFromMapObject(floorValues, _sensorType);
-// _ceil = getValueFromMapObject(ceilValues, _sensorType);
-// _threshold = getValueFromMapObject(thresholdValues, _sensorType);
-
 // struct Value {
 //   int16_t floor;
 //   int16_t ceil;
@@ -338,7 +334,3 @@ void Sensor::sendSerialMidiMessage() {
 //   { "gx", { 100, 15500, 50 } },
 //   { "gy", { 100, 15500, 50 } },
 // };
-
-// int16_t getValueFromMapObject(std::map<std::string, Value> mapObject, std::string &type) {
-
-// }
