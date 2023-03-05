@@ -112,7 +112,7 @@ void loop() {
         SENSOR.setMeasuresCounter(1);
       }
     }
-    // printRuntimeOverralValue(counter, timeBuffer, previousTime, currentTime);
+    printRuntimeOverrallValue(counter, timeBuffer, previousTime, currentTime);
   }
   delay(1);
 }
