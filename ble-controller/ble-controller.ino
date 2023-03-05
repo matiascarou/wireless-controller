@@ -43,7 +43,7 @@ void setup() {
   delay(1000);
   Serial.begin(115200);
   Wire.begin();
-  Wire.setClock(200000);
+  Wire.setClock(400000L);
   delay(500);
   setCpuFrequencyMhz(240);
   // const uint32_t Freq = getCpuFrequencyMhz();
