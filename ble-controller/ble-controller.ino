@@ -100,7 +100,7 @@ void loop() {
           const unsigned long currentDebounceValue = millis();
           SENSOR.setCurrentDebounceValue(currentDebounceValue);
           const std::string sensorType = SENSOR.getSensorType();
-          int16_t averageValue = SENSOR.runNonBlockingAverageFilter();,
+          int16_t averageValue = SENSOR.runNonBlockingAverageFilter();
           const uint8_t sensorMappedValue = SENSOR.getMappedMidiValue(averageValue);
           SENSOR.setPreviousValue(SENSOR.currentValue);
           SENSOR.setCurrentValue(sensorMappedValue);
