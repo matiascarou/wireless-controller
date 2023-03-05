@@ -6,19 +6,35 @@
 #include "Sensor.h"
 #include "Adafruit_VL53L0X.h"
 
-void printTotalLoopRuntime(unsigned long current, unsigned long& previous) {
-  Serial.print("Loop total time: ");
-  Serial.println(current - previous);
-  previous = current;
+void printRuntimeOverralValue(int& counter, int& timeBuffer, unsigned long& previousTime, unsigned long& currentTime) {
+  static const int CYCLES_AMOUNT = 20;
+  if (counter % CYCLES_AMOUNT == 0 && counter != 0) {
+    Serial.print("Average running time of ");
+    Serial.print(CYCLES_AMOUNT);
+    Serial.print(" cycles: ");
+    Serial.print(timeBuffer);
+    Serial.print("\t");
+    Serial.print("Average running time of one cycle: ");
+    const int diff = timeBuffer / counter;
+    Serial.println(diff);
+    timeBuffer = 0;
+    counter = 0;
+  }
+  const int timeDiff = currentTime - previousTime;
+  previousTime = currentTime;
+  timeBuffer += timeDiff;
+  counter++;
 }
 
 /**
 * Code starts here
 **/
 #define PITCH_BEND_BUTTON 32
-#define PITCH_BEND_LED 18
+#define PITCH_BEND_LED 32
 
 const uint8_t ERROR_LED = 2;
+// const uint8_t PITCH_BEND_LED = 18;
+// const uint8_t PITCH_BEND_BUTTON = 32;
 
 MPU6050 accelgyro;
 
@@ -27,10 +43,10 @@ Adafruit_VL53L0X lox = Adafruit_VL53L0X();
 std::vector<Sensor> SENSORS = Sensor::initializeSensors();
 
 void setup() {
-  delay(100);
+  delay(500);
   Serial.begin(115200);
   Wire.begin();
-  setCpuFrequencyMhz(240);
+  setCpuFrequencyMhz(160);
   // const uint32_t Freq = getCpuFrequencyMhz();
   // Serial.print("CPU Freq is ");
   // Serial.print(Freq);
@@ -53,22 +69,19 @@ void setup() {
 
   delay(100);
 
-  Serial.println("Initializing Bluetooth...");
-
   BLEMidiServer.begin("Le tuts controller");
 
   delay(100);
-
-  Serial.println("Sensors ready (:");
 }
 
 unsigned long currentTime = 0;
 unsigned long previousTime = 0;
+int timeBuffer = 0;
+int counter = 0;
 
 bool currentButtonState = false;
 bool lastButtonState = false;
 bool toggleStatus = false;
-
 bool pitchBendLedState = false;
 
 void loop() {
@@ -99,6 +112,6 @@ void loop() {
       }
     }
   }
-  // printTotalLoopRuntime(currentTime, previousTime);
+  printRuntimeOverralValue(counter, timeBuffer, previousTime, currentTime);
   delayMicroseconds(500);
 }

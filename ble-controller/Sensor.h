@@ -113,7 +113,7 @@ public:
   }
 
 
-  static bool isPitchButtonActive(bool &currentButtonState, bool &lastButtonState, bool &toggleStatus, const uint8_t &PITCH_BEND_BUTTON) {
+  static bool isPitchButtonActive(bool &currentButtonState, bool &lastButtonState, bool &toggleStatus, const uint8_t PITCH_BEND_BUTTON) {
     currentButtonState = !!digitalRead(PITCH_BEND_BUTTON);
     if (currentButtonState && !lastButtonState) {
       toggleStatus = !toggleStatus ? true : false;
@@ -122,14 +122,14 @@ public:
     return toggleStatus;
   }
 
-  static void setInfraredSensorStates(Sensor &infraredSensor, bool &pitchBendLedState, int16_t thresholdValue, std::string midiMessage, bool newLedState, const uint8_t &PITCH_BEND_LED) {
+  static void setInfraredSensorStates(Sensor &infraredSensor, bool &pitchBendLedState, int16_t thresholdValue, std::string midiMessage, bool newLedState, const uint8_t PITCH_BEND_LED) {
     pitchBendLedState = newLedState;
     digitalWrite(PITCH_BEND_LED, pitchBendLedState);
     infraredSensor.setThreshold(thresholdValue);
     infraredSensor.setMidiMessage(midiMessage);
   }
 
-  static void runPitchBendLogic(Sensor &infraredSensor, const bool &isBendActive, bool &pitchBendLedState, const uint8_t &PITCH_BEND_LED) {
+  static void runPitchBendLogic(Sensor &infraredSensor, const bool &isBendActive, bool &pitchBendLedState, const uint8_t PITCH_BEND_LED) {
     if (isBendActive && !pitchBendLedState) {
       setInfraredSensorStates(infraredSensor, pitchBendLedState, 1, "pitchBend", true, PITCH_BEND_LED);
     }
@@ -149,9 +149,16 @@ public:
 
   static void testInfraredSensorConnection(Adafruit_VL53L0X &lox) {
     if (!lox.begin()) {
-      Serial.println(F("Failed to boot VL53L0X"));
+      Serial.println("Failed to boot VL53L0X");
       digitalWrite(ERROR_LED, HIGH);
     }
+  }
+
+  static void testI2cSensorsConnection(MPU6050 &accelgyro, Adafruit_VL53L0X &lox) {
+    Sensor::testAccelgiroConnection(accelgyro);
+    delay(100);
+    Sensor::testInfraredSensorConnection(lox);
+    delay(100);
   }
 };
 
