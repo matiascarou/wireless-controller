@@ -209,7 +209,7 @@ int16_t Sensor::runBlockingAverageFilter(int measureSize, MPU6050 &accelgyro, Ad
 }
 
 int16_t Sensor::runExponentialFilter(MPU6050 &accelgyro, Adafruit_VL53L0X &lox) {
-  static const float alpha = 0.2;
+  static const float alpha = 0.5;
   const int16_t rawValue = this->getRawValue(accelgyro, lox);
   const float filteredValue = rawValue * alpha + (1 - alpha) * rawValue;
   return int(filteredValue);
@@ -242,7 +242,7 @@ int Sensor::getMappedMidiValue(int16_t actualValue, int floor, int ceil) {
     return constrain(map(actualValue, floor, ceil, 0, 127), 0, 127);
   }
   if (this->_midiMessage == "pitchBend") {
-    const int pitchBendValue = constrain(map(actualValue, _floor, _ceil, 0, 16383), 0, 16383);
+    const int pitchBendValue = constrain(map(actualValue, _floor, _ceil, 8191, 16383), 8191, 16383);
     int shiftedValue = pitchBendValue << 1;
     this->msb = highByte(shiftedValue);
     this->lsb = lowByte(shiftedValue) >> 1;

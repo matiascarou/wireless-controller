@@ -43,7 +43,7 @@ void setup() {
   delay(1000);
   Serial.begin(115200);
   Wire.begin();
-  Wire.setClock(200000L);
+  Wire.setClock(200000);
   delay(500);
   setCpuFrequencyMhz(240);
   // const uint32_t Freq = getCpuFrequencyMhz();
@@ -100,7 +100,7 @@ void loop() {
           const unsigned long currentDebounceValue = millis();
           SENSOR.setCurrentDebounceValue(currentDebounceValue);
           const std::string sensorType = SENSOR.getSensorType();
-          int16_t averageValue = sensorType != "infrared" ? SENSOR.runNonBlockingAverageFilter() : SENSOR.runExponentialFilter(accelgyro, lox);
+          int16_t averageValue = SENSOR.runNonBlockingAverageFilter();,
           const uint8_t sensorMappedValue = SENSOR.getMappedMidiValue(averageValue);
           SENSOR.setPreviousValue(SENSOR.currentValue);
           SENSOR.setCurrentValue(sensorMappedValue);
