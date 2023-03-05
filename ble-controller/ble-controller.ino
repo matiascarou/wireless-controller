@@ -43,10 +43,10 @@ Adafruit_VL53L0X lox = Adafruit_VL53L0X();
 std::vector<Sensor> SENSORS = Sensor::initializeSensors();
 
 void setup() {
-  delay(500);
   Serial.begin(115200);
   Wire.begin();
-  setCpuFrequencyMhz(160);
+  delay(500);
+  setCpuFrequencyMhz(240);
   // const uint32_t Freq = getCpuFrequencyMhz();
   // Serial.print("CPU Freq is ");
   // Serial.print(Freq);
