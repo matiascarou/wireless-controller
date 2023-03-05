@@ -114,7 +114,7 @@ public:
   }
 
 
-  static bool isPitchButtonActive(bool &currentButtonState, bool &lastButtonState, bool &toggleStatus, const uint8_t PITCH_BEND_BUTTON) {
+  static bool isPitchButtonActive(bool &currentButtonState, bool &lastButtonState, bool &toggleStatus, const uint8_t &PITCH_BEND_BUTTON) {
     currentButtonState = !!digitalRead(PITCH_BEND_BUTTON);
     if (currentButtonState && !lastButtonState) {
       toggleStatus = !toggleStatus ? true : false;
@@ -123,14 +123,14 @@ public:
     return toggleStatus;
   }
 
-  static void setInfraredSensorStates(Sensor &infraredSensor, bool &pitchBendLedState, int16_t thresholdValue, std::string midiMessage, bool newLedState, const uint8_t PITCH_BEND_LED) {
+  static void setInfraredSensorStates(Sensor &infraredSensor, bool &pitchBendLedState, int16_t thresholdValue, std::string midiMessage, bool newLedState, const uint8_t &PITCH_BEND_LED) {
     pitchBendLedState = newLedState;
     digitalWrite(PITCH_BEND_LED, pitchBendLedState);
     infraredSensor.setThreshold(thresholdValue);
     infraredSensor.setMidiMessage(midiMessage);
   }
 
-  static void runPitchBendLogic(Sensor &infraredSensor, const bool &isBendActive, bool &pitchBendLedState, const uint8_t PITCH_BEND_LED) {
+  static void runPitchBendLogic(Sensor &infraredSensor, const bool &isBendActive, bool &pitchBendLedState, const uint8_t &PITCH_BEND_LED) {
     if (isBendActive && !pitchBendLedState) {
       setInfraredSensorStates(infraredSensor, pitchBendLedState, 1, "pitchBend", true, PITCH_BEND_LED);
     }
@@ -168,7 +168,7 @@ public:
     byte error, address;
     int devicesFound = 0;
 
-    Serial.println("Scanning...");
+    Serial.println("Scanning I2C bus...");
 
     for (address = 1; address < 127; address++) {
       wire.beginTransmission(address);

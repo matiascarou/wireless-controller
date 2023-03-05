@@ -6,7 +6,7 @@
 #include "Sensor.h"
 #include "Adafruit_VL53L0X.h"
 
-void printRuntimeOverralValue(int& counter, int& timeBuffer, unsigned long& previousTime, unsigned long& currentTime) {
+void printRuntimeOverrallValue(int& counter, int& timeBuffer, unsigned long& previousTime, unsigned long& currentTime) {
   static const int CYCLES_AMOUNT = 20;
   if (counter % CYCLES_AMOUNT == 0 && counter != 0) {
     Serial.print("Average running time of ");
@@ -30,7 +30,7 @@ void printRuntimeOverralValue(int& counter, int& timeBuffer, unsigned long& prev
 * Code starts here
 **/
 #define PITCH_BEND_BUTTON 32
-#define PITCH_BEND_LED 32
+#define PITCH_BEND_LED 18
 
 const uint8_t ERROR_LED = 2;
 
@@ -40,7 +40,7 @@ Adafruit_VL53L0X lox = Adafruit_VL53L0X();
 std::vector<Sensor> SENSORS = Sensor::initializeSensors();
 
 void setup() {
-  delay(500);
+  delay(1000);
   Serial.begin(115200);
   Wire.begin();
   Wire.setClock(200000L);
@@ -112,7 +112,7 @@ void loop() {
         SENSOR.setMeasuresCounter(1);
       }
     }
-    printRuntimeOverralValue(counter, timeBuffer, previousTime, currentTime);
+    // printRuntimeOverralValue(counter, timeBuffer, previousTime, currentTime);
   }
   delay(1);
 }

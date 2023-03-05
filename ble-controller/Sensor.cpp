@@ -156,7 +156,6 @@ int16_t Sensor::getRawValue(MPU6050 &accelgyro, Adafruit_VL53L0X &lox) {
     return measure.RangeStatus != 4 && measure.RangeMilliMeter >= _floor / 2 ? measure.RangeMilliMeter : this->previousRawValue;
   }
 
-
   if (_sensorType == "ax") {
     const int16_t rawValue = accelgyro.getAccelerationX();
     return constrain(rawValue, 0, _ceil);
@@ -296,6 +295,9 @@ void Sensor::sendBleMidiMessage(BLEMidiServerClass &serverInstance) {
   }
 }
 
+/**
+* WIP: Add support for sending MIDI messages through serial.
+**/
 void Sensor::sendSerialMidiMessage() {
   if (_midiMessage == "controlChange") {
     Serial.write(_statusCode);
