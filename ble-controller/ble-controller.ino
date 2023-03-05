@@ -113,5 +113,5 @@ void loop() {
     }
   }
   printRuntimeOverralValue(counter, timeBuffer, previousTime, currentTime);
-  delayMicroseconds(500);
+  delay(1);
 }

@@ -6,7 +6,7 @@
 
 uint16_t Sensor::getDebounceThreshold(std::string &type) {
   static std::map<std::string, int> debounceThresholdValues = {
-    { "force", 10 },
+    { "force", 15 },
     { "sonar", 100 },
   };
   return debounceThresholdValues[type];
