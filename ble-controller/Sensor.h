@@ -4,6 +4,7 @@
 #include "MPU6050.h"
 #include <BLEMidi.h>
 #include "Adafruit_VL53L0X.h"
+#include "Wire.h"
 
 extern const uint8_t ERROR_LED;
 
@@ -151,6 +152,8 @@ public:
     if (!lox.begin()) {
       Serial.println("Failed to boot VL53L0X");
       digitalWrite(ERROR_LED, HIGH);
+    } else {
+      Serial.println("Succesfully connected to VL53L0X!");
     }
   }
 
@@ -159,6 +162,27 @@ public:
     delay(100);
     Sensor::testInfraredSensorConnection(lox);
     delay(100);
+  }
+
+  static void checkForI2CDevices(TwoWire &wire) {
+    byte error, address;
+    int devicesFound = 0;
+
+    Serial.println("Scanning...");
+
+    for (address = 1; address < 127; address++) {
+      wire.beginTransmission(address);
+      error = wire.endTransmission();
+
+      if (error == 0) {
+        Serial.print("Device found at address 0x");
+        if (address < 16) {
+          Serial.print("0");
+        }
+        Serial.println(address, HEX);
+        devicesFound++;
+      }
+    }
   }
 };
 

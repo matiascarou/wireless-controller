@@ -33,18 +33,17 @@ void printRuntimeOverralValue(int& counter, int& timeBuffer, unsigned long& prev
 #define PITCH_BEND_LED 32
 
 const uint8_t ERROR_LED = 2;
-// const uint8_t PITCH_BEND_LED = 18;
-// const uint8_t PITCH_BEND_BUTTON = 32;
 
 MPU6050 accelgyro;
-
 Adafruit_VL53L0X lox = Adafruit_VL53L0X();
 
 std::vector<Sensor> SENSORS = Sensor::initializeSensors();
 
 void setup() {
+  delay(500);
   Serial.begin(115200);
   Wire.begin();
+  Wire.setClock(200000L);
   delay(500);
   setCpuFrequencyMhz(240);
   // const uint32_t Freq = getCpuFrequencyMhz();
@@ -60,6 +59,8 @@ void setup() {
   pinMode(ERROR_LED, OUTPUT);
   pinMode(PITCH_BEND_BUTTON, INPUT);
   pinMode(PITCH_BEND_LED, OUTPUT);
+
+  Sensor::checkForI2CDevices(Wire);
 
   Sensor::testAccelgiroConnection(accelgyro);
 
@@ -85,8 +86,8 @@ bool toggleStatus = false;
 bool pitchBendLedState = false;
 
 void loop() {
-  currentTime = millis();
   if (BLEMidiServer.isConnected()) {
+    currentTime = millis();
     const bool isBendActive = Sensor::isPitchButtonActive(currentButtonState, lastButtonState, toggleStatus, PITCH_BEND_BUTTON);
     Sensor& infraredSensor = Sensor::getSensorBySensorType(SENSORS, "infrared");
     Sensor::runPitchBendLogic(infraredSensor, isBendActive, pitchBendLedState, PITCH_BEND_LED);
@@ -111,7 +112,7 @@ void loop() {
         SENSOR.setMeasuresCounter(1);
       }
     }
+    printRuntimeOverralValue(counter, timeBuffer, previousTime, currentTime);
   }
-  printRuntimeOverralValue(counter, timeBuffer, previousTime, currentTime);
   delay(1);
 }
