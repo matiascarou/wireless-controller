@@ -17,12 +17,12 @@ int16_t Sensor::getFilterThreshold(std::string &type) {
     { "potentiometer", 40 },
     { "force", 1 },
     { "sonar", 1 },
-    { "ax", 40 },
-    { "ay", 40 },
-    { "az", 40 },
-    { "gx", 40 },
-    { "gy", 40 },
-    { "gz", 40 },
+    { "ax", 35 },
+    { "ay", 35 },
+    { "az", 35 },
+    { "gx", 35 },
+    { "gy", 35 },
+    { "gz", 35 },
     { "infrared", 2 },
   };
   return filterThresholdValues[type];
