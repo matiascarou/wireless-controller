@@ -37,20 +37,17 @@ const uint8_t ERROR_LED = 2;
 MPU6050 accelgyro;
 Adafruit_VL53L0X lox = Adafruit_VL53L0X();
 
-std::vector<Sensor> SENSORS = Sensor::initializeSensors();
+// std::vector<Sensor> SENSORS = Sensor::initializeSensors();
+std::vector<Sensor*> SENSORS = Sensor::initializeSensors();
 
 void setup() {
   delay(1000);
   Serial.begin(115200);
   Wire.begin();
-  Wire.setClock(200000);
+  Wire.setClock(400000L);
   delay(500);
   setCpuFrequencyMhz(240);
   // const uint32_t Freq = getCpuFrequencyMhz();
-  // Serial.print("CPU Freq is ");
-  // Serial.print(Freq);
-  // Serial.println(" MHz");
-  accelgyro.initialize();
 
   analogReadResolution(10);
 
@@ -66,6 +63,7 @@ void setup() {
 
   delay(100);
 
+  accelgyro.initialize();
   Sensor::testAccelgiroConnection(accelgyro);
 
   delay(100);
@@ -89,30 +87,30 @@ void loop() {
   if (BLEMidiServer.isConnected()) {
     currentTime = millis();
     const bool isBendActive = Sensor::isPitchButtonActive(currentButtonState, lastButtonState, toggleStatus, PITCH_BEND_BUTTON);
-    Sensor& infraredSensor = Sensor::getSensorBySensorType(SENSORS, "infrared");
+    Sensor* infraredSensor = Sensor::getSensorBySensorType(SENSORS, "infrared");
     Sensor::runPitchBendLogic(infraredSensor, isBendActive, pitchBendLedState, PITCH_BEND_LED);
-    for (Sensor& SENSOR : SENSORS) {
-      if (SENSOR.isSwitchActive()) {
-        int16_t rawValue = SENSOR.getRawValue(&accelgyro, &lox);
-        SENSOR.setPreviousRawValue(rawValue);
-        SENSOR.setDataBuffer(rawValue);
-        if (SENSOR.isAboveThreshold()) {
+    for (Sensor* SENSOR : SENSORS) {
+      if (SENSOR->isSwitchActive()) {
+        int16_t rawValue = SENSOR->getRawValue(&accelgyro, &lox);
+        SENSOR->setPreviousRawValue(rawValue);
+        SENSOR->setDataBuffer(rawValue);
+        if (SENSOR->isAboveThreshold()) {
           const unsigned long currentDebounceValue = millis();
-          SENSOR.setCurrentDebounceValue(currentDebounceValue);
-          const std::string sensorType = SENSOR.getSensorType();
-          int16_t averageValue = SENSOR.runNonBlockingAverageFilter();
-          const uint8_t sensorMappedValue = SENSOR.getMappedMidiValue(averageValue);
-          SENSOR.setPreviousValue(SENSOR.currentValue);
-          SENSOR.setCurrentValue(sensorMappedValue);
-          SENSOR.debounce(&accelgyro, &lox);
-          SENSOR.sendBleMidiMessage(&BLEMidiServer);
-          SENSOR.setMeasuresCounter(0);
-          SENSOR.setDataBuffer(0);
+          SENSOR->setCurrentDebounceValue(currentDebounceValue);
+          const std::string sensorType = SENSOR->getSensorType();
+          int16_t averageValue = SENSOR->runNonBlockingAverageFilter();
+          const uint8_t sensorMappedValue = SENSOR->getMappedMidiValue(averageValue);
+          SENSOR->setPreviousValue(SENSOR->currentValue);
+          SENSOR->setCurrentValue(sensorMappedValue);
+          SENSOR->debounce(&accelgyro, &lox);
+          SENSOR->sendBleMidiMessage(&BLEMidiServer);
+          SENSOR->setMeasuresCounter(0);
+          SENSOR->setDataBuffer(0);
         }
-        SENSOR.setMeasuresCounter(1);
+        SENSOR->setMeasuresCounter(1);
       }
     }
-    printRuntimeOverrallValue(counter, timeBuffer, previousTime, currentTime);
+    // printRuntimeOverrallValue(counter, timeBuffer, previousTime, currentTime);
   }
   delay(1);
 }

@@ -65,54 +65,76 @@ public:
   void debounce(MPU6050 *accelgyro, Adafruit_VL53L0X *lox);
   std::string getSensorType();
 
-  static Sensor &getSensorBySensorType(std::vector<Sensor> &SENSORS, std::string sensorType) {
-    for (Sensor &SENSOR : SENSORS) {
-      if (SENSOR._sensorType == sensorType) {
+  static void setUpSensorPins(std::vector<Sensor *> SENSORS) {
+    for (Sensor *SENSOR : SENSORS) {
+      if (!!SENSOR->_pin) {
+        Serial.print("!!");
+        Serial.println(SENSOR->_pin);
+        pinMode(SENSOR->_pin, INPUT);
+      }
+      if (!!SENSOR->_intPin) {
+        pinMode(SENSOR->_intPin, INPUT);
+      }
+    }
+  }
+
+  // std::vector<Sensor *> initializeSensors() {
+  //   std::vector<Sensor *> sensors = {
+  //     new Sensor("sensor1"),
+  //     new Sensor("sensor2"),
+  //     new Sensor("sensor3")
+  //   };
+  //   return sensors;
+  // }
+
+  static std::vector<Sensor *> initializeSensors() {
+    const static std::vector<Sensor *> SENSORS = {
+      new Sensor("potentiometer", 102, 15),
+      new Sensor("potentiometer", 103, 36),
+      new Sensor("force", 104, 4),
+      new Sensor("ax", 105, 0, 19),
+      new Sensor("ay", 106, 0, 5),
+      new Sensor("infrared", 108, 0, 17),
+    };
+    return SENSORS;
+  }
+
+  // static std::vector<Sensor> initializeSensors() {
+  //   const static std::vector<Sensor> SENSORS = {
+  //     Sensor("potentiometer", 102, 15),
+  //     Sensor("potentiometer", 103, 36),
+  //     Sensor("force", 104, 4),
+  //     Sensor("ax", 105, 0, 19),
+  //     Sensor("ay", 106, 0, 5),
+  //     Sensor("infrared", 108, 0, 17),
+  //   };
+  //   return SENSORS;
+  //   /**
+  //   * Comment out lines below for STM32 + Xbees support
+  //   * BLE approach will be unavailable for the STM microcontroller
+  //   **/
+  //   //   std::vector<Sensor> SENSORS = {
+  //   //     Sensor("potentiometer", 102, PA0),
+  //   //     Sensor("potentiometer", 103, PA1),
+  //   //     Sensor("force", 104, PA1),
+  //   //     Sensor("ax", 105, 0, PB12),
+  //   //     Sensor("ay", 106, 0, PB14),
+  //   //     Sensor("gx", 105, 0, PB13),
+  //   //     Sensor("gy", 106, 0, PB3),
+  //   //     Sensor("sonar", 107, PB15, PB5)
+  //   //   };
+  //   //   return SENSORS;
+  // }
+
+  static Sensor *getSensorBySensorType(std::vector<Sensor *> SENSORS, std::string sensorType) {
+    for (Sensor* SENSOR : SENSORS) {
+      if (SENSOR->_sensorType == sensorType) {
         return SENSOR;
       }
     }
     const std::string errorMessage = "Sensor " + sensorType + " not found";
     Serial.println(errorMessage.c_str());
   }
-
-  static void setUpSensorPins(std::vector<Sensor> &SENSORS) {
-    for (Sensor SENSOR : SENSORS) {
-      if (!!SENSOR._pin) {
-        pinMode(SENSOR._pin, INPUT);
-      }
-      if (!!SENSOR._intPin) {
-        pinMode(SENSOR._intPin, INPUT);
-      }
-    }
-  }
-
-  static std::vector<Sensor> initializeSensors() {
-    const static std::vector<Sensor> SENSORS = {
-      Sensor("potentiometer", 102, 15),
-      Sensor("potentiometer", 103, 36),
-      Sensor("force", 104, 4),
-      Sensor("ax", 105, 0, 19),
-      Sensor("ay", 106, 0, 5),
-      Sensor("infrared", 108, 0, 17),
-    };
-    return SENSORS;
-    /**
-    * Comment out lines below for STM32 + Xbees support
-    * BLE approach will be unavailable for the STM microcontroller
-    **/
-    //   std::vector<Sensor> SENSORS = {
-    //     Sensor("potentiometer", 102, PA0),
-    //     Sensor("potentiometer", 103, PA1),
-    //     Sensor("force", 104, PA1),
-    //     Sensor("ax", 105, 0, PB12),
-    //     Sensor("ay", 106, 0, PB14),
-    //     Sensor("gx", 105, 0, PB13),
-    //     Sensor("gy", 106, 0, PB3),
-    //     Sensor("sonar", 107, PB15, PB5)
-    //   };
-    //   return SENSORS;
-  }
-
 
   static bool isPitchButtonActive(bool &currentButtonState, bool &lastButtonState, bool &toggleStatus, const uint8_t &PITCH_BEND_BUTTON) {
     currentButtonState = !!digitalRead(PITCH_BEND_BUTTON);
@@ -123,14 +145,14 @@ public:
     return toggleStatus;
   }
 
-  static void setInfraredSensorStates(Sensor &infraredSensor, bool &pitchBendLedState, int16_t thresholdValue, std::string midiMessage, bool newLedState, const uint8_t &PITCH_BEND_LED) {
+  static void setInfraredSensorStates(Sensor *infraredSensor, bool &pitchBendLedState, int16_t thresholdValue, std::string midiMessage, bool newLedState, const uint8_t &PITCH_BEND_LED) {
     pitchBendLedState = newLedState;
     digitalWrite(PITCH_BEND_LED, pitchBendLedState);
-    infraredSensor.setThreshold(thresholdValue);
-    infraredSensor.setMidiMessage(midiMessage);
+    infraredSensor->setThreshold(thresholdValue);
+    infraredSensor->setMidiMessage(midiMessage);
   }
 
-  static void runPitchBendLogic(Sensor &infraredSensor, const bool &isBendActive, bool &pitchBendLedState, const uint8_t &PITCH_BEND_LED) {
+  static void runPitchBendLogic(Sensor *infraredSensor, const bool &isBendActive, bool &pitchBendLedState, const uint8_t &PITCH_BEND_LED) {
     if (isBendActive && !pitchBendLedState) {
       setInfraredSensorStates(infraredSensor, pitchBendLedState, 2, "pitchBend", true, PITCH_BEND_LED);
     }
