@@ -78,16 +78,7 @@ public:
     }
   }
 
-  // std::vector<Sensor *> initializeSensors() {
-  //   std::vector<Sensor *> sensors = {
-  //     new Sensor("sensor1"),
-  //     new Sensor("sensor2"),
-  //     new Sensor("sensor3")
-  //   };
-  //   return sensors;
-  // }
-
-  static std::vector<Sensor *> initializeSensors() {
+  static std::vector<Sensor *> initializeSensorsWithEsp32() {
     const static std::vector<Sensor *> SENSORS = {
       new Sensor("potentiometer", 102, 15),
       new Sensor("potentiometer", 103, 36),
@@ -99,7 +90,24 @@ public:
     return SENSORS;
   }
 
-  // static std::vector<Sensor> initializeSensors() {
+  /**
+  * For STM32 and Xbees support.
+  **/
+  // static std::vector<Sensor *> initializeSensorsWithStm32() {
+  //   const static std::vector<Sensor *> SENSORS = {
+  //     new Sensor("potentiometer", 102, PA0),
+  //     new Sensor("potentiometer", 103, PA1),
+  //     new Sensor("force", 104, PA1),
+  //     new Sensor("ax", 105, 0, PB12),
+  //     new Sensor("ay", 106, 0, PB14),
+  //     new Sensor("gx", 105, 0, PB13),
+  //     new Sensor("gy", 106, 0, PB3),
+  //     new Sensor("sonar", 107, PB15, PB5)
+  //   };
+  //   return SENSORS;
+  // }
+
+  // static std::vector<Sensor> initializeSensorsWithEsp32() {
   //   const static std::vector<Sensor> SENSORS = {
   //     Sensor("potentiometer", 102, 15),
   //     Sensor("potentiometer", 103, 36),
@@ -109,25 +117,10 @@ public:
   //     Sensor("infrared", 108, 0, 17),
   //   };
   //   return SENSORS;
-  //   /**
-  //   * Comment out lines below for STM32 + Xbees support
-  //   * BLE approach will be unavailable for the STM microcontroller
-  //   **/
-  //   //   std::vector<Sensor> SENSORS = {
-  //   //     Sensor("potentiometer", 102, PA0),
-  //   //     Sensor("potentiometer", 103, PA1),
-  //   //     Sensor("force", 104, PA1),
-  //   //     Sensor("ax", 105, 0, PB12),
-  //   //     Sensor("ay", 106, 0, PB14),
-  //   //     Sensor("gx", 105, 0, PB13),
-  //   //     Sensor("gy", 106, 0, PB3),
-  //   //     Sensor("sonar", 107, PB15, PB5)
-  //   //   };
-  //   //   return SENSORS;
   // }
 
   static Sensor *getSensorBySensorType(std::vector<Sensor *> SENSORS, std::string sensorType) {
-    for (Sensor* SENSOR : SENSORS) {
+    for (Sensor *SENSOR : SENSORS) {
       if (SENSOR->_sensorType == sensorType) {
         return SENSOR;
       }

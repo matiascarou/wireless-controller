@@ -37,8 +37,7 @@ const uint8_t ERROR_LED = 2;
 MPU6050 accelgyro;
 Adafruit_VL53L0X lox = Adafruit_VL53L0X();
 
-// std::vector<Sensor> SENSORS = Sensor::initializeSensors();
-std::vector<Sensor*> SENSORS = Sensor::initializeSensors();
+std::vector<Sensor*> SENSORS = Sensor::initializeSensorsWithEsp32();
 
 void setup() {
   delay(1000);
