@@ -45,10 +45,10 @@ public:
   bool isSwitchActive();
   bool isAboveThreshold();
   int getMappedMidiValue(int16_t actualValue, int floor = 0, int ceil = 0);
-  int16_t getRawValue(MPU6050 &accelgyro, Adafruit_VL53L0X &lox);
+  int16_t getRawValue(MPU6050 *accelgyro, Adafruit_VL53L0X *lox);
   int16_t runNonBlockingAverageFilter();
-  int16_t runBlockingAverageFilter(int measureSize, MPU6050 &accelgyro, Adafruit_VL53L0X &lox, int gap = 500);
-  int16_t runExponentialFilter(MPU6050 &accelgyro, Adafruit_VL53L0X &lox);
+  int16_t runBlockingAverageFilter(int measureSize, MPU6050 *accelgyro, Adafruit_VL53L0X *lox, int gap = 500);
+  int16_t runExponentialFilter(MPU6050 *accelgyro, Adafruit_VL53L0X *lox);
   std::vector< uint8_t > getValuesBetweenRanges(uint8_t gap = 1);
   void setCurrentDebounceValue(unsigned long timeValue);
   void setCurrentValue(uint8_t value);
@@ -59,10 +59,10 @@ public:
   void setThreshold(uint8_t value);
   void setMidiMessage(std::string value);
   void sendMidiMessage(BLEMidiServerClass &serverInstance, const char mode[] = "BLE");
-  void sendBleMidiMessage(BLEMidiServerClass &serverInstance);
+  void sendBleMidiMessage(BLEMidiServerClass *serverInstance);
   void sendSerialMidiMessage();
   void setMidiChannel(uint8_t channel);
-  void debounce(MPU6050 &accelgyro, Adafruit_VL53L0X &lox);
+  void debounce(MPU6050 *accelgyro, Adafruit_VL53L0X *lox);
   std::string getSensorType();
 
   static Sensor &getSensorBySensorType(std::vector<Sensor> &SENSORS, std::string sensorType) {
@@ -148,8 +148,8 @@ public:
     }
   }
 
-  static void testInfraredSensorConnection(Adafruit_VL53L0X &lox) {
-    if (!lox.begin()) {
+  static void testInfraredSensorConnection(Adafruit_VL53L0X &lox, uint8_t i2c_addr, TwoWire *i2c = &Wire) {
+    if (!lox.begin(i2c_addr, false, &Wire)) {
       Serial.println("Failed to boot VL53L0X");
       digitalWrite(ERROR_LED, HIGH);
     } else {
@@ -157,22 +157,15 @@ public:
     }
   }
 
-  static void testI2cSensorsConnection(MPU6050 &accelgyro, Adafruit_VL53L0X &lox) {
-    Sensor::testAccelgiroConnection(accelgyro);
-    delay(100);
-    Sensor::testInfraredSensorConnection(lox);
-    delay(100);
-  }
-
-  static void checkForI2CDevices(TwoWire &wire) {
+  static void checkForI2CDevices(TwoWire *wire) {
     byte error, address;
     int devicesFound = 0;
 
     Serial.println("Scanning I2C bus...");
 
     for (address = 1; address < 127; address++) {
-      wire.beginTransmission(address);
-      error = wire.endTransmission();
+      wire->beginTransmission(address);
+      error = wire->endTransmission();
 
       if (error == 0) {
         Serial.print("Device found at address 0x");

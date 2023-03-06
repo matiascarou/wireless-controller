@@ -143,7 +143,7 @@ std::string Sensor::getSensorType() {
   return this->_sensorType;
 }
 
-int16_t Sensor::getRawValue(MPU6050 &accelgyro, Adafruit_VL53L0X &lox) {
+int16_t Sensor::getRawValue(MPU6050 *accelgyro, Adafruit_VL53L0X *lox) {
   if (_sensorType == "potentiometer" || _sensorType == "force" || _sensorType == "sonar") {
     return analogRead(_pin);
   }
@@ -151,38 +151,38 @@ int16_t Sensor::getRawValue(MPU6050 &accelgyro, Adafruit_VL53L0X &lox) {
   if (_sensorType == "infrared") {
     VL53L0X_RangingMeasurementData_t measure;
 
-    lox.rangingTest(&measure, false);
+    lox->rangingTest(&measure, false);
 
     return measure.RangeStatus != 4 && measure.RangeMilliMeter >= _floor / 2 ? measure.RangeMilliMeter : this->previousRawValue;
   }
 
   if (_sensorType == "ax") {
-    const int16_t rawValue = accelgyro.getAccelerationX();
+    const int16_t rawValue = accelgyro->getAccelerationX();
     return constrain(rawValue, 0, _ceil);
   }
 
   if (_sensorType == "ay") {
-    const int16_t rawValue = accelgyro.getAccelerationY();
+    const int16_t rawValue = accelgyro->getAccelerationY();
     return constrain(rawValue, 0, _ceil);
   }
 
   if (_sensorType == "az") {
-    const int16_t rawValue = accelgyro.getAccelerationZ();
+    const int16_t rawValue = accelgyro->getAccelerationZ();
     return constrain(rawValue, 0, _ceil);
   }
 
   if (_sensorType == "gx") {
-    const int16_t rawValue = accelgyro.getRotationX();
+    const int16_t rawValue = accelgyro->getRotationX();
     return constrain(rawValue, 0, _ceil);
   }
 
   if (_sensorType == "gy") {
-    const int16_t rawValue = accelgyro.getRotationY();
+    const int16_t rawValue = accelgyro->getRotationY();
     return constrain(rawValue, 0, _ceil);
   }
 
   if (_sensorType == "gz") {
-    const int16_t rawValue = accelgyro.getRotationZ();
+    const int16_t rawValue = accelgyro->getRotationZ();
     return constrain(rawValue, 0, _ceil);
   }
 
@@ -194,7 +194,7 @@ int16_t Sensor::runNonBlockingAverageFilter() {
   return this->dataBuffer / _threshold;
 }
 
-int16_t Sensor::runBlockingAverageFilter(int measureSize, MPU6050 &accelgyro, Adafruit_VL53L0X &lox, int gap) {
+int16_t Sensor::runBlockingAverageFilter(int measureSize, MPU6050 *accelgyro, Adafruit_VL53L0X *lox, int gap) {
   int buffer = 0;
   for (int i = 0; i < measureSize; i++) {
     int16_t value = this->getRawValue(accelgyro, lox);
@@ -208,7 +208,7 @@ int16_t Sensor::runBlockingAverageFilter(int measureSize, MPU6050 &accelgyro, Ad
   return result;
 }
 
-int16_t Sensor::runExponentialFilter(MPU6050 &accelgyro, Adafruit_VL53L0X &lox) {
+int16_t Sensor::runExponentialFilter(MPU6050 *accelgyro, Adafruit_VL53L0X *lox) {
   static const float alpha = 0.5;
   const int16_t rawValue = this->getRawValue(accelgyro, lox);
   const float filteredValue = rawValue * alpha + (1 - alpha) * rawValue;
@@ -251,7 +251,7 @@ int Sensor::getMappedMidiValue(int16_t actualValue, int floor, int ceil) {
   return constrain(map(actualValue, _floor, _ceil, 0, 127), 0, 127);
 }
 
-void Sensor::debounce(MPU6050 &accelgyro, Adafruit_VL53L0X &lox) {
+void Sensor::debounce(MPU6050 *accelgyro, Adafruit_VL53L0X *lox) {
   if (_sensorType == "sonar") {
     if (this->_currentDebounceValue - this->_previousDebounceValue >= _debounceThreshold) {
       const int16_t rawValue = this->getRawValue(accelgyro, lox);
@@ -273,24 +273,24 @@ void Sensor::debounce(MPU6050 &accelgyro, Adafruit_VL53L0X &lox) {
   }
 }
 
-void Sensor::sendBleMidiMessage(BLEMidiServerClass &serverInstance) {
+void Sensor::sendBleMidiMessage(BLEMidiServerClass *serverInstance) {
   if (this->_midiMessage == "controlChange") {
     if (this->currentValue != this->previousValue) {
-      serverInstance.controlChange(_channel, _controllerNumber, char(this->currentValue));
+      serverInstance->controlChange(_channel, _controllerNumber, char(this->currentValue));
     }
   }
   if (this->_midiMessage == "gate") {
     if (this->toggleStatus != this->previousToggleStatus) {
       if (this->toggleStatus) {
-        serverInstance.noteOn(_channel, char(60), char(127));
+        serverInstance->noteOn(_channel, char(60), char(127));
       } else {
-        serverInstance.noteOff(_channel, char(60), char(127));
+        serverInstance->noteOff(_channel, char(60), char(127));
       }
     }
   }
   if (this->_midiMessage == "pitchBend") {
     if (this->currentValue != this->previousValue) {
-      serverInstance.pitchBend(_channel, this->lsb, this->msb);
+      serverInstance->pitchBend(_channel, this->lsb, this->msb);
     }
   }
 }

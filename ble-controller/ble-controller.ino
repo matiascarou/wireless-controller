@@ -43,7 +43,7 @@ void setup() {
   delay(1000);
   Serial.begin(115200);
   Wire.begin();
-  Wire.setClock(400000L);
+  Wire.setClock(200000);
   delay(500);
   setCpuFrequencyMhz(240);
   // const uint32_t Freq = getCpuFrequencyMhz();
@@ -60,13 +60,13 @@ void setup() {
   pinMode(PITCH_BEND_BUTTON, INPUT);
   pinMode(PITCH_BEND_LED, OUTPUT);
 
-  Sensor::checkForI2CDevices(Wire);
+  Sensor::checkForI2CDevices(&Wire);
 
-  Sensor::testAccelgiroConnection(accelgyro);
+  Sensor::testInfraredSensorConnection(lox, 0x29, &Wire);
 
   delay(100);
 
-  Sensor::testInfraredSensorConnection(lox);
+  Sensor::testAccelgiroConnection(accelgyro);
 
   delay(100);
 
@@ -93,7 +93,7 @@ void loop() {
     Sensor::runPitchBendLogic(infraredSensor, isBendActive, pitchBendLedState, PITCH_BEND_LED);
     for (Sensor& SENSOR : SENSORS) {
       if (SENSOR.isSwitchActive()) {
-        int16_t rawValue = SENSOR.getRawValue(accelgyro, lox);
+        int16_t rawValue = SENSOR.getRawValue(&accelgyro, &lox);
         SENSOR.setPreviousRawValue(rawValue);
         SENSOR.setDataBuffer(rawValue);
         if (SENSOR.isAboveThreshold()) {
@@ -104,8 +104,8 @@ void loop() {
           const uint8_t sensorMappedValue = SENSOR.getMappedMidiValue(averageValue);
           SENSOR.setPreviousValue(SENSOR.currentValue);
           SENSOR.setCurrentValue(sensorMappedValue);
-          SENSOR.debounce(accelgyro, lox);
-          SENSOR.sendBleMidiMessage(BLEMidiServer);
+          SENSOR.debounce(&accelgyro, &lox);
+          SENSOR.sendBleMidiMessage(&BLEMidiServer);
           SENSOR.setMeasuresCounter(0);
           SENSOR.setDataBuffer(0);
         }
