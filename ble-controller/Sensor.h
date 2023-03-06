@@ -107,18 +107,6 @@ public:
   //   return SENSORS;
   // }
 
-  // static std::vector<Sensor> initializeSensorsWithEsp32() {
-  //   const static std::vector<Sensor> SENSORS = {
-  //     Sensor("potentiometer", 102, 15),
-  //     Sensor("potentiometer", 103, 36),
-  //     Sensor("force", 104, 4),
-  //     Sensor("ax", 105, 0, 19),
-  //     Sensor("ay", 106, 0, 5),
-  //     Sensor("infrared", 108, 0, 17),
-  //   };
-  //   return SENSORS;
-  // }
-
   static Sensor *getSensorBySensorType(std::vector<Sensor *> SENSORS, std::string sensorType) {
     for (Sensor *SENSOR : SENSORS) {
       if (SENSOR->_sensorType == sensorType) {

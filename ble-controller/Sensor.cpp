@@ -40,7 +40,7 @@ int16_t Sensor::getFloor(std::string &type) {
     { "gx", 50 },
     { "gy", 50 },
     { "gz", 50 },
-    { "infrared", 60 },
+    { "infrared", 70 },
   };
   return floorValues[type];
 }
