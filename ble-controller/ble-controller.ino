@@ -90,6 +90,7 @@ void loop() {
     Sensor::runPitchBendLogic(infraredSensor, isBendActive, pitchBendLedState, PITCH_BEND_LED);
     for (Sensor* SENSOR : SENSORS) {
       if (SENSOR->isSwitchActive()) {
+        SENSOR->setMeasuresCounter(1);
         int16_t rawValue = SENSOR->getRawValue(&accelgyro, &lox);
         SENSOR->setPreviousRawValue(rawValue);
         SENSOR->setDataBuffer(rawValue);
@@ -106,7 +107,6 @@ void loop() {
           SENSOR->setMeasuresCounter(0);
           SENSOR->setDataBuffer(0);
         }
-        SENSOR->setMeasuresCounter(1);
       }
     }
     // printRuntimeOverrallValue(counter, timeBuffer, previousTime, currentTime);

@@ -68,8 +68,6 @@ public:
   static void setUpSensorPins(std::vector<Sensor *> SENSORS) {
     for (Sensor *SENSOR : SENSORS) {
       if (!!SENSOR->_pin) {
-        Serial.print("!!");
-        Serial.println(SENSOR->_pin);
         pinMode(SENSOR->_pin, INPUT);
       }
       if (!!SENSOR->_intPin) {
@@ -97,12 +95,13 @@ public:
   //   const static std::vector<Sensor *> SENSORS = {
   //     new Sensor("potentiometer", 102, PA0),
   //     new Sensor("potentiometer", 103, PA1),
-  //     new Sensor("force", 104, PA1),
-  //     new Sensor("ax", 105, 0, PB12),
-  //     new Sensor("ay", 106, 0, PB14),
-  //     new Sensor("gx", 105, 0, PB13),
-  //     new Sensor("gy", 106, 0, PB3),
-  //     new Sensor("sonar", 107, PB15, PB5)
+  //     new Sensor("potentiometer", 104, PA2),
+  //     new Sensor("force", 105, PA1),
+  //     new Sensor("ax", 106, 0, PB12),
+  //     new Sensor("ay", 107, 0, PB14),
+  //     new Sensor("gx", 108, 0, PB13),
+  //     new Sensor("gy", 109, 0, PB3),
+  //     new Sensor("sonar", 110, PB15, PB5)
   //   };
   //   return SENSORS;
   // }
