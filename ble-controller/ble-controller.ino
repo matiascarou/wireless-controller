@@ -18,10 +18,10 @@ std::vector<Sensor*> SENSORS = Sensor::initializeEsp32Sensors();
 
 void setup() {
   delay(1000);
-  Serial.begin(115200);
+  // Serial.begin(115200);
   Wire.begin();
-  Wire.setClock(400000L);
-  delay(200);
+  // Wire.setClock(400000L);
+  delay(1000);
   setCpuFrequencyMhz(240);
   // const uint32_t Freq = getCpuFrequencyMhz();
 
@@ -33,7 +33,7 @@ void setup() {
   pinMode(PITCH_BEND_BUTTON, INPUT);
   pinMode(PITCH_BEND_LED, OUTPUT);
 
-  Sensor::checkForI2CDevices(&Wire);
+  // Sensor::checkForI2CDevices(&Wire);
 
   Sensor::testInfraredSensorConnection(lox, 0x29, &Wire);
 
@@ -85,7 +85,7 @@ void loop() {
         }
       }
     }
-    Utils::printRuntimeOverrallValue(counter, timeBuffer, previousTime, currentTime);
+    // Utils::printRuntimeOverrallValue(counter, timeBuffer, previousTime, currentTime);
   }
   delay(1);
 }
