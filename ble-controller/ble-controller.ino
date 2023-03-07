@@ -21,8 +21,8 @@ void setup() {
   // Serial.begin(115200);
   Wire.begin();
   // Wire.setClock(400000L);
-  delay(1000);
-  setCpuFrequencyMhz(240);
+  delay(200);
+  // setCpuFrequencyMhz(240);
   // const uint32_t Freq = getCpuFrequencyMhz();
 
   analogReadResolution(10);
@@ -37,12 +37,12 @@ void setup() {
 
   Sensor::testInfraredSensorConnection(lox, 0x29, &Wire);
 
-  delay(100);
+  delay(200);
 
   accelgyro.initialize();
   Sensor::testAccelgiroConnection(accelgyro);
 
-  delay(100);
+  delay(200);
 
   BLEMidiServer.begin("The performer");
 
