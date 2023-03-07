@@ -5,46 +5,23 @@
 #include "Wire.h"
 #include "Sensor.h"
 #include "Adafruit_VL53L0X.h"
-
-void printRuntimeOverrallValue(int& counter, int& timeBuffer, unsigned long& previousTime, unsigned long& currentTime) {
-  static const int CYCLES_AMOUNT = 20;
-  if (counter % CYCLES_AMOUNT == 0 && counter != 0) {
-    Serial.print("Average running time of ");
-    Serial.print(CYCLES_AMOUNT);
-    Serial.print(" cycles: ");
-    Serial.print(timeBuffer);
-    Serial.print("\t");
-    Serial.print("Average running time of one cycle: ");
-    const int diff = timeBuffer / counter;
-    Serial.println(diff);
-    timeBuffer = 0;
-    counter = 0;
-  }
-  const int timeDiff = currentTime - previousTime;
-  previousTime = currentTime;
-  timeBuffer += timeDiff;
-  counter++;
-}
-
-/**
-* Code starts here
-**/
-#define PITCH_BEND_BUTTON 32
-#define PITCH_BEND_LED 18
+#include "Utils.h"
 
 const uint8_t ERROR_LED = 2;
+const uint8_t PITCH_BEND_BUTTON = 32;
+const uint8_t PITCH_BEND_LED = 18;
 
 MPU6050 accelgyro;
 Adafruit_VL53L0X lox = Adafruit_VL53L0X();
 
-std::vector<Sensor*> SENSORS = Sensor::initializeSensorsWithEsp32();
+std::vector<Sensor*> SENSORS = Sensor::initializeEsp32Sensors();
 
 void setup() {
   delay(1000);
   Serial.begin(115200);
   Wire.begin();
   Wire.setClock(400000L);
-  delay(500);
+  delay(200);
   setCpuFrequencyMhz(240);
   // const uint32_t Freq = getCpuFrequencyMhz();
 
@@ -67,7 +44,7 @@ void setup() {
 
   delay(100);
 
-  BLEMidiServer.begin("Le tuts controller");
+  BLEMidiServer.begin("The performer");
 
   delay(100);
 }
@@ -97,7 +74,6 @@ void loop() {
         if (SENSOR->isAboveThreshold()) {
           const unsigned long currentDebounceValue = millis();
           SENSOR->setCurrentDebounceValue(currentDebounceValue);
-          const std::string sensorType = SENSOR->getSensorType();
           int16_t averageValue = SENSOR->runNonBlockingAverageFilter();
           const uint8_t sensorMappedValue = SENSOR->getMappedMidiValue(averageValue);
           SENSOR->setPreviousValue(SENSOR->currentValue);
@@ -109,7 +85,7 @@ void loop() {
         }
       }
     }
-    // printRuntimeOverrallValue(counter, timeBuffer, previousTime, currentTime);
+    Utils::printRuntimeOverrallValue(counter, timeBuffer, previousTime, currentTime);
   }
   delay(1);
 }

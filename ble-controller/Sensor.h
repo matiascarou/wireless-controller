@@ -76,7 +76,7 @@ public:
     }
   }
 
-  static std::vector<Sensor *> initializeSensorsWithEsp32() {
+  static std::vector<Sensor *> initializeEsp32Sensors() {
     const static std::vector<Sensor *> SENSORS = {
       new Sensor("potentiometer", 102, 15),
       new Sensor("potentiometer", 103, 36),
@@ -91,7 +91,7 @@ public:
   /**
   * For STM32 and Xbees support.
   **/
-  // static std::vector<Sensor *> initializeSensorsWithStm32() {
+  // static std::vector<Sensor *> initializeStm32Sensors() {
   //   const static std::vector<Sensor *> SENSORS = {
   //     new Sensor("potentiometer", 102, PA0),
   //     new Sensor("potentiometer", 103, PA1),
