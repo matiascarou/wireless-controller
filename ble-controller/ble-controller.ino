@@ -5,7 +5,7 @@
 #include "Wire.h"
 #include "Sensor.h"
 #include "Adafruit_VL53L0X.h"
-#include "Utils.h"
+// #include "Utils.h"
 
 const uint8_t ERROR_LED = 2;
 const uint8_t PITCH_BEND_BUTTON = 32;
@@ -19,13 +19,17 @@ std::vector<Sensor*> SENSORS = Sensor::initializeEsp32Sensors();
 void setup() {
   delay(1000);
   // Serial.begin(115200);
+  Serial.println("Starting I2C bus...");
   Wire.begin();
-  // Wire.setClock(400000L);
+  // Wire.setClock(200000);
   delay(200);
-  // setCpuFrequencyMhz(240);
+  setCpuFrequencyMhz(240);
+  delay(100);
   // const uint32_t Freq = getCpuFrequencyMhz();
 
   analogReadResolution(10);
+
+  Serial.println("Setting up pins...");
 
   Sensor::setUpSensorPins(SENSORS);
 
@@ -35,18 +39,21 @@ void setup() {
 
   // Sensor::checkForI2CDevices(&Wire);
 
+  Serial.println("Initializing I2C sensors...");
+
   Sensor::testInfraredSensorConnection(lox, 0x29, &Wire);
 
-  delay(200);
+  delay(500);
 
   accelgyro.initialize();
+  delay(200);
   Sensor::testAccelgiroConnection(accelgyro);
 
-  delay(200);
+  delay(500);
 
   BLEMidiServer.begin("The performer");
 
-  delay(100);
+  delay(200);
 }
 
 unsigned long currentTime = 0;
