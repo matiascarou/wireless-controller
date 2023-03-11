@@ -21,6 +21,12 @@ static void printRuntimeOverrallValue(int& counter, int& timeBuffer, unsigned lo
   timeBuffer += timeDiff;
   counter++;
 }
+static void setAndGetCpuFrequency(const uint32_t& Freq) {
+  setCpuFrequencyMhz(Freq);
+  const uint32_t esp32ProcessorSpeed = getCpuFrequencyMhz();
+  delay(500);
+  return esp32ProcessorSpeed;
+}
 }
 
 #endif

@@ -18,14 +18,13 @@ std::vector<Sensor*> SENSORS = Sensor::initializeEsp32Sensors();
 
 void setup() {
   delay(1000);
-  // Serial.begin(115200);
+  // const uint32_t Freq = Utils::setAndGetCpuFrequency(240);
+  Serial.begin(115200);
   Serial.println("Starting I2C bus...");
   Wire.begin();
+  delay(500);
   // Wire.setClock(200000);
-  delay(200);
-  setCpuFrequencyMhz(240);
-  delay(100);
-  // const uint32_t Freq = getCpuFrequencyMhz();
+  // delay(500);
 
   analogReadResolution(10);
 
@@ -41,19 +40,20 @@ void setup() {
 
   Serial.println("Initializing I2C sensors...");
 
-  Sensor::testInfraredSensorConnection(lox, 0x29, &Wire);
+  Sensor::testInfraredSensorConnection(lox, 0x29, ERROR_LED, &Wire);
 
-  delay(500);
+  delay(200);
 
   accelgyro.initialize();
-  delay(200);
-  Sensor::testAccelgiroConnection(accelgyro);
+  Sensor::testAccelgiroConnection(accelgyro, ERROR_LED);
 
-  delay(500);
+  delay(200);
+
+  Serial.println("Initializing BLE server...");
 
   BLEMidiServer.begin("The performer");
 
-  delay(200);
+  delay(500);
 }
 
 unsigned long currentTime = 0;

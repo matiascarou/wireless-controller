@@ -6,7 +6,7 @@
 #include "Adafruit_VL53L0X.h"
 #include "Wire.h"
 
-extern const uint8_t ERROR_LED;
+// extern const uint8_t ERROR_LED;
 
 class Sensor {
 private:
@@ -141,7 +141,7 @@ public:
     }
   }
 
-  static void testAccelgiroConnection(MPU6050 &accelgyro) {
+  static void testAccelgiroConnection(MPU6050 &accelgyro, const uint8_t &ERROR_LED) {
     if (accelgyro.testConnection()) {
       Serial.println("Succesfully connected to IMU!");
     } else {
@@ -150,7 +150,7 @@ public:
     }
   }
 
-  static void testInfraredSensorConnection(Adafruit_VL53L0X &lox, uint8_t i2c_addr, TwoWire *i2c = &Wire) {
+  static void testInfraredSensorConnection(Adafruit_VL53L0X &lox, uint8_t i2c_addr, const uint8_t &ERROR_LED, TwoWire *i2c = &Wire) {
     if (!lox.begin(i2c_addr, false, &Wire)) {
       Serial.println("Failed to boot VL53L0X");
       digitalWrite(ERROR_LED, HIGH);
