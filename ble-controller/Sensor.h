@@ -88,7 +88,7 @@ public:
   }
 
   /**
-  * For STM32 and Xbees support.
+  * For STM32 support.
   **/
   static std::vector<Sensor *> initializeStm32Sensors() {
     const static std::vector<Sensor *> SENSORS = {
@@ -97,6 +97,7 @@ public:
       // new Sensor("potentiometer", 104, PA2),
       new Sensor("force", 105, PA4),
       // new Sensor("ax", 106, 0, PB12),
+      new Sensor("ax", 106, 0, 0),
       // new Sensor("ay", 107, 0, PB14),
       // new Sensor("sonar", 110, PB15, PB5)
     };
@@ -138,12 +139,13 @@ public:
     }
   }
 
-  static void testAccelgiroConnection(MPU6050 &accelgyro, const uint8_t &ERROR_LED) {
+  // static void testAccelgiroConnection(MPU6050 &accelgyro, const uint8_t &ERROR_LED) {
+  static void testAccelgiroConnection(MPU6050 &accelgyro) {
+    accelgyro.initialize();
     if (accelgyro.testConnection()) {
       Serial.println("Succesfully connected to IMU!");
     } else {
       Serial.println("There was a problem with the IMU initialization");
-      digitalWrite(ERROR_LED, HIGH);
     }
   }
 

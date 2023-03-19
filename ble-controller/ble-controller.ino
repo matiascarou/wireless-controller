@@ -1,10 +1,10 @@
 #include <Arduino.h>
-// #include <BLEMidi.h>
 #include "I2Cdev.h"
 #include "MPU6050.h"
 #include "Wire.h"
 #include "Sensor.h"
 #include "Adafruit_VL53L0X.h"
+// #include <BLEMidi.h>
 // #include "Utils.h"
 
 // const uint8_t ERROR_LED = 2;
@@ -16,7 +16,7 @@ Adafruit_VL53L0X lox = Adafruit_VL53L0X();
 
 // std::vector<Sensor*> SENSORS = Sensor::initializeEsp32Sensors();
 std::vector<Sensor*> SENSORS = Sensor::initializeStm32Sensors();
-HardwareSerial Serial2(PA3, PA2);    //RX, TX 
+HardwareSerial Serial2(PA3, PA2);  //RX, TX
 
 void setup() {
   delay(1000);
@@ -46,12 +46,9 @@ void setup() {
 
   delay(200);
 
-  // accelgyro.initialize();
-  // Sensor::testAccelgiroConnection(accelgyro, ERROR_LED);
+  Sensor::testAccelgiroConnection(accelgyro);
 
   delay(200);
-
-  // Serial.println("Initializing BLE server...");
 
   // BLEMidiServer.begin("The performer");
 
@@ -72,32 +69,32 @@ bool pitchBendLedState = false;
 
 void loop() {
   // if (BLEMidiServer.isConnected()) {
-    currentTime = millis();
-    // const bool isBendActive = Sensor::isPitchButtonActive(currentButtonState, lastButtonState, toggleStatus, PITCH_BEND_BUTTON);
-    // Sensor* infraredSensor = Sensor::getSensorBySensorType(SENSORS, "infrared");
-    // Sensor::runPitchBendLogic(infraredSensor, isBendActive, pitchBendLedState, PITCH_BEND_LED);
-    for (Sensor* SENSOR : SENSORS) {
-      if (SENSOR->isSwitchActive()) {
-        SENSOR->setMeasuresCounter(1);
-        int16_t rawValue = SENSOR->getRawValue(&accelgyro, &lox);
-        SENSOR->setPreviousRawValue(rawValue);
-        SENSOR->setDataBuffer(rawValue);
-        if (SENSOR->isAboveThreshold()) {
-          const unsigned long currentDebounceValue = millis();
-          SENSOR->setCurrentDebounceValue(currentDebounceValue);
-          int16_t averageValue = SENSOR->runNonBlockingAverageFilter();
-          const uint8_t sensorMappedValue = SENSOR->getMappedMidiValue(averageValue);
-          SENSOR->setPreviousValue(SENSOR->currentValue);
-          SENSOR->setCurrentValue(sensorMappedValue);
-          SENSOR->debounce(&accelgyro, &lox);
-          // SENSOR->sendBleMidiMessage(&BLEMidiServer);
-          SENSOR->sendSerialMidiMessage(&Serial2);
-          SENSOR->setMeasuresCounter(0);
-          SENSOR->setDataBuffer(0);
-        }
+  currentTime = millis();
+  // const bool isBendActive = Sensor::isPitchButtonActive(currentButtonState, lastButtonState, toggleStatus, PITCH_BEND_BUTTON);
+  // Sensor* infraredSensor = Sensor::getSensorBySensorType(SENSORS, "infrared");
+  // Sensor::runPitchBendLogic(infraredSensor, isBendActive, pitchBendLedState, PITCH_BEND_LED);
+  for (Sensor* SENSOR : SENSORS) {
+    if (SENSOR->isSwitchActive()) {
+      SENSOR->setMeasuresCounter(1);
+      int16_t rawValue = SENSOR->getRawValue(&accelgyro, &lox);
+      SENSOR->setPreviousRawValue(rawValue);
+      SENSOR->setDataBuffer(rawValue);
+      if (SENSOR->isAboveThreshold()) {
+        const unsigned long currentDebounceValue = millis();
+        SENSOR->setCurrentDebounceValue(currentDebounceValue);
+        int16_t averageValue = SENSOR->runNonBlockingAverageFilter();
+        const uint8_t sensorMappedValue = SENSOR->getMappedMidiValue(averageValue);
+        SENSOR->setPreviousValue(SENSOR->currentValue);
+        SENSOR->setCurrentValue(sensorMappedValue);
+        SENSOR->debounce(&accelgyro, &lox);
+        // SENSOR->sendBleMidiMessage(&BLEMidiServer);
+        SENSOR->sendSerialMidiMessage(&Serial2);
+        SENSOR->setMeasuresCounter(0);
+        SENSOR->setDataBuffer(0);
       }
     }
-    // Utils::printRuntimeOverrallValue(counter, timeBuffer, previousTime, currentTime);
+  }
+  // Utils::printRuntimeOverrallValue(counter, timeBuffer, previousTime, currentTime);
   // }
   delay(1);
 }

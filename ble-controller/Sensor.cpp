@@ -19,12 +19,12 @@ int16_t Sensor::getFilterThreshold(std::string &type) {
     { "potentiometer", 30 },
     { "force", 1 },
     { "sonar", 1 },
-    { "ax", 30 },
-    { "ay", 30 },
-    { "az", 30 },
-    { "gx", 30 },
-    { "gy", 30 },
-    { "gz", 30 },
+    { "ax", 40 },
+    { "ay", 40 },
+    { "az", 40 },
+    { "gx", 40 },
+    { "gy", 40 },
+    { "gz", 40 },
     { "infrared", 2 },
   };
   return filterThresholdValues[type];
@@ -298,16 +298,14 @@ void Sensor::debounce(MPU6050 *accelgyro, Adafruit_VL53L0X *lox) {
 // }
 
 void Sensor::sendSerialMidiMessage(HardwareSerial *Serial2) {
+  Serial.print("Sending MIDI data for midi message: ");
+  Serial.println(this->_midiMessage.c_str());
   if (this->_midiMessage == "controlChange") {
-    Serial.print("Sending MIDI data for midi message: ");
-    Serial.println(this->_midiMessage.c_str());
     if (this->currentValue != this->previousValue) {
       Sensor::writeSerialMidiMessage(this->_statusCode, this->_controllerNumber, this->currentValue, Serial2);
     }
   }
   if (this->_midiMessage == "gate") {
-    Serial.print("Sending MIDI data for midi message: ");
-    Serial.println(this->_midiMessage.c_str());
     if (this->toggleStatus != this->previousToggleStatus) {
       if (this->toggleStatus) {
         Sensor::writeSerialMidiMessage(144, 60, 127, Serial2);
