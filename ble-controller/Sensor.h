@@ -2,11 +2,11 @@
 #define Sensor_h
 #include <Arduino.h>
 #include "MPU6050.h"
-#include <BLEMidi.h>
+// #include <BLEMidi.h>
 #include "Adafruit_VL53L0X.h"
 #include "Wire.h"
-
-// extern const uint8_t ERROR_LED;
+#include <vector>
+#include <map>
 
 class Sensor {
 private:
@@ -58,9 +58,8 @@ public:
   void setDataBuffer(int16_t value);
   void setThreshold(uint8_t value);
   void setMidiMessage(std::string value);
-  void sendMidiMessage(BLEMidiServerClass &serverInstance, const char mode[] = "BLE");
-  void sendBleMidiMessage(BLEMidiServerClass *serverInstance);
-  void sendSerialMidiMessage();
+  // void sendBleMidiMessage(BLEMidiServerClass *serverInstance);
+  void sendSerialMidiMessage(HardwareSerial *Serial2);
   void setMidiChannel(uint8_t channel);
   void debounce(MPU6050 *accelgyro, Adafruit_VL53L0X *lox);
   std::string getSensorType();
@@ -91,20 +90,18 @@ public:
   /**
   * For STM32 and Xbees support.
   **/
-  // static std::vector<Sensor *> initializeStm32Sensors() {
-  //   const static std::vector<Sensor *> SENSORS = {
-  //     new Sensor("potentiometer", 102, PA0),
-  //     new Sensor("potentiometer", 103, PA1),
-  //     new Sensor("potentiometer", 104, PA2),
-  //     new Sensor("force", 105, PA1),
-  //     new Sensor("ax", 106, 0, PB12),
-  //     new Sensor("ay", 107, 0, PB14),
-  //     new Sensor("gx", 108, 0, PB13),
-  //     new Sensor("gy", 109, 0, PB3),
-  //     new Sensor("sonar", 110, PB15, PB5)
-  //   };
-  //   return SENSORS;
-  // }
+  static std::vector<Sensor *> initializeStm32Sensors() {
+    const static std::vector<Sensor *> SENSORS = {
+      new Sensor("potentiometer", 102, PA0),
+      // new Sensor("potentiometer", 103, PA1),
+      // new Sensor("potentiometer", 104, PA2),
+      // new Sensor("force", 105, PA1),
+      // new Sensor("ax", 106, 0, PB12),
+      // new Sensor("ay", 107, 0, PB14),
+      // new Sensor("sonar", 110, PB15, PB5)
+    };
+    return SENSORS;
+  }
 
   static Sensor *getSensorBySensorType(std::vector<Sensor *> SENSORS, std::string sensorType) {
     for (Sensor *SENSOR : SENSORS) {
@@ -137,7 +134,7 @@ public:
       setInfraredSensorStates(infraredSensor, pitchBendLedState, 2, "pitchBend", true, PITCH_BEND_LED);
     }
     if (!isBendActive && pitchBendLedState) {
-      setInfraredSensorStates(infraredSensor, pitchBendLedState, 2, "controlChange", false, PITCH_BEND_LED);
+      setInfraredSensorStates(infraredSensor, pitchBendLedState, 1, "controlChange", false, PITCH_BEND_LED);
     }
   }
 
@@ -156,27 +153,6 @@ public:
       digitalWrite(ERROR_LED, HIGH);
     } else {
       Serial.println("Succesfully connected to VL53L0X!");
-    }
-  }
-
-  static void checkForI2CDevices(TwoWire *wire) {
-    byte error, address;
-    int devicesFound = 0;
-
-    Serial.println("Scanning I2C bus...");
-
-    for (address = 1; address < 127; address++) {
-      wire->beginTransmission(address);
-      error = wire->endTransmission();
-
-      if (error == 0) {
-        Serial.print("Device found at address 0x");
-        if (address < 16) {
-          Serial.print("0");
-        }
-        Serial.println(address, HEX);
-        devicesFound++;
-      }
     }
   }
 };

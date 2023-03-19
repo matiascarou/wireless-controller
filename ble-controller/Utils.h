@@ -21,11 +21,31 @@ static void printRuntimeOverrallValue(int& counter, int& timeBuffer, unsigned lo
   timeBuffer += timeDiff;
   counter++;
 }
-static void setAndGetCpuFrequency(const uint32_t& Freq) {
+static void setAndGetEsp32CpuFrequency(const uint32_t& Freq) {
   setCpuFrequencyMhz(Freq);
   const uint32_t esp32ProcessorSpeed = getCpuFrequencyMhz();
   delay(500);
   return esp32ProcessorSpeed;
+}
+static void checkForI2CDevices(TwoWire* wire) {
+  byte error, address;
+  int devicesFound = 0;
+
+  Serial.println("Scanning I2C bus...");
+
+  for (address = 1; address < 127; address++) {
+    wire->beginTransmission(address);
+    error = wire->endTransmission();
+
+    if (error == 0) {
+      Serial.print("Device found at address 0x");
+      if (address < 16) {
+        Serial.print("0");
+      }
+      Serial.println(address, HEX);
+      devicesFound++;
+    }
+  }
 }
 }
 

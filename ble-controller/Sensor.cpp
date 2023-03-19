@@ -1,8 +1,10 @@
 #include "Sensor.h"
 #include "MPU6050.h"
-#include <BLEMidi.h>
+// #include <BLEMidi.h>
 #include "Adafruit_VL53L0X.h"
 #include <math.h>
+#include <vector>
+#include <map>
 
 uint16_t Sensor::getDebounceThreshold(std::string &type) {
   static std::map<std::string, int> debounceThresholdValues = {
@@ -14,15 +16,15 @@ uint16_t Sensor::getDebounceThreshold(std::string &type) {
 
 int16_t Sensor::getFilterThreshold(std::string &type) {
   static std::map<std::string, int> filterThresholdValues = {
-    { "potentiometer", 40 },
+    { "potentiometer", 30 },
     { "force", 1 },
     { "sonar", 1 },
-    { "ax", 35 },
-    { "ay", 35 },
-    { "az", 35 },
-    { "gx", 35 },
-    { "gy", 35 },
-    { "gz", 35 },
+    { "ax", 30 },
+    { "ay", 30 },
+    { "az", 30 },
+    { "gx", 30 },
+    { "gy", 30 },
+    { "gz", 30 },
     { "infrared", 2 },
   };
   return filterThresholdValues[type];
@@ -70,7 +72,7 @@ static std::map<std::string, std::string> midiMessages = {
 Sensor::Sensor(const std::string &sensorType, const uint8_t &controllerNumber, const uint8_t &pin, const uint8_t &intPin) {
   _pin = pin;
   _controllerNumber = char(controllerNumber);
-  _channel = char(0);
+  _channel = 0;
   _statusCode = char(176);
   _intPin = intPin;
   _midiMessage = sensorType != "force" ? "controlChange" : "gate";
@@ -273,50 +275,61 @@ void Sensor::debounce(MPU6050 *accelgyro, Adafruit_VL53L0X *lox) {
   }
 }
 
-void Sensor::sendBleMidiMessage(BLEMidiServerClass *serverInstance) {
-  if (this->_midiMessage == "controlChange") {
-    if (this->currentValue != this->previousValue) {
-      serverInstance->controlChange(_channel, _controllerNumber, char(this->currentValue));
-    }
-  }
-  if (this->_midiMessage == "gate") {
-    if (this->toggleStatus != this->previousToggleStatus) {
-      if (this->toggleStatus) {
-        serverInstance->noteOn(_channel, char(60), char(127));
-      } else {
-        serverInstance->noteOff(_channel, char(60), char(127));
-      }
-    }
-  }
-  if (this->_midiMessage == "pitchBend") {
-    if (this->currentValue != this->previousValue) {
-      serverInstance->pitchBend(_channel, this->lsb, this->msb);
-    }
-  }
-}
+// void Sensor::sendBleMidiMessage(BLEMidiServerClass *serverInstance) {
+//   if (this->_midiMessage == "controlChange") {
+//     if (this->currentValue != this->previousValue) {
+//       serverInstance->controlChange(_channel, _controllerNumber, char(this->currentValue));
+//     }
+//   }
+//   if (this->_midiMessage == "gate") {
+//     if (this->toggleStatus != this->previousToggleStatus) {
+//       if (this->toggleStatus) {
+//         serverInstance->noteOn(_channel, char(60), char(127));
+//       } else {
+//         serverInstance->noteOff(_channel, char(60), char(127));
+//       }
+//     }
+//   }
+//   if (this->_midiMessage == "pitchBend") {
+//     if (this->currentValue != this->previousValue) {
+//       serverInstance->pitchBend(_channel, this->lsb, this->msb);
+//     }
+//   }
+// }
 
 /**
 * WIP: Add support for sending MIDI messages through serial.
 **/
-void Sensor::sendSerialMidiMessage() {
-  if (_midiMessage == "controlChange") {
-    Serial.write(_statusCode);
-    Serial.write(_controllerNumber);
-    Serial.write(char(this->currentValue));
-  }
-  if (_midiMessage == "gate") {
-    if (this->toggleStatus != this->previousToggleStatus) {
-      if (this->toggleStatus) {
-        Serial.write(char(144));
-        Serial.write(char(60));
-        Serial.write(char(127));
-      } else {
-        Serial.write(char(128));
-        Serial.write(char(60));
-        Serial.write(char(127));
+void Sensor::sendSerialMidiMessage(HardwareSerial *Serial2) {
+  if (this->currentValue != this->previousValue) {
+    Serial.print("Sending MIDI data: ");
+    if (_midiMessage == "controlChange") {
+      this->currentValue = (char)this->currentValue;
+      if (this->currentValue == '\n') {
+        this->currentValue = '\t';
       }
+      // Serial.println(this->currentValue);
+      // const std::string message = this->_statusCode + this->_controllerNumber + this->currentValue + "\n";
+      // Serial2->write(message.c_str());
+      Serial2->write(this->_statusCode);
+      Serial2->write(this->_controllerNumber);
+      Serial2->write(this->currentValue);
+      Serial2->write("\n");
     }
   }
+  // if (_midiMessage == "gate") {
+  //   if (this->toggleStatus != this->previousToggleStatus) {
+  //     if (this->toggleStatus) {
+  //       Serial.write(char(144));
+  //       Serial.write(char(60));
+  //       Serial.write(char(127));
+  //     } else {
+  //       Serial.write(char(128));
+  //       Serial.write(char(60));
+  //       Serial.write(char(127));
+  //     }
+  //   }
+  // }
 }
 
 // struct Value {
