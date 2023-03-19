@@ -1,6 +1,4 @@
 #include <Arduino.h>
-// #include <vector>
-// #include <map>
 // #include <BLEMidi.h>
 #include "I2Cdev.h"
 #include "MPU6050.h"
@@ -53,7 +51,7 @@ void setup() {
 
   delay(200);
 
-  Serial.println("Initializing BLE server...");
+  // Serial.println("Initializing BLE server...");
 
   // BLEMidiServer.begin("The performer");
 

@@ -71,9 +71,9 @@ static std::map<std::string, std::string> midiMessages = {
 
 Sensor::Sensor(const std::string &sensorType, const uint8_t &controllerNumber, const uint8_t &pin, const uint8_t &intPin) {
   _pin = pin;
-  _controllerNumber = char(controllerNumber);
+  _controllerNumber = controllerNumber;
   _channel = 0;
-  _statusCode = char(176);
+  _statusCode = 176;
   _intPin = intPin;
   _midiMessage = sensorType != "force" ? "controlChange" : "gate";
   _sensorType = sensorType;
@@ -297,24 +297,18 @@ void Sensor::debounce(MPU6050 *accelgyro, Adafruit_VL53L0X *lox) {
 //   }
 // }
 
-/**
-* WIP: Add support for sending MIDI messages through serial.
-**/
 void Sensor::sendSerialMidiMessage(HardwareSerial *Serial2) {
   if (this->currentValue != this->previousValue) {
-    Serial.print("Sending MIDI data: ");
+    Serial.println("Sending MIDI data: ");
     if (_midiMessage == "controlChange") {
-      this->currentValue = (char)this->currentValue;
-      if (this->currentValue == '\n') {
-        this->currentValue = '\t';
-      }
-      // Serial.println(this->currentValue);
+      //TODO: see why this approach doesn't work
       // const std::string message = this->_statusCode + this->_controllerNumber + this->currentValue + "\n";
       // Serial2->write(message.c_str());
-      Serial2->write(this->_statusCode);
-      Serial2->write(this->_controllerNumber);
-      Serial2->write(this->currentValue);
-      Serial2->write("\n");
+      Serial2->write(char(this->_statusCode));
+      Serial2->write(char(this->_controllerNumber));
+      Serial2->write(char(this->currentValue));
+      const byte rightGuillemet[] = { 0xC2, 0xBB };
+      Serial2->write(rightGuillemet, sizeof(rightGuillemet));
     }
   }
   // if (_midiMessage == "gate") {
