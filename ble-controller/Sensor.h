@@ -10,9 +10,9 @@
 
 class Sensor {
 private:
-  char _controllerNumber;
+  uint8_t _controllerNumber;
   char _channel;
-  char _statusCode;
+  uint8_t _statusCode;
   uint8_t measuresCounter;
   bool isActive;
   bool toggleStatus;
@@ -95,7 +95,7 @@ public:
       new Sensor("potentiometer", 102, PA0),
       // new Sensor("potentiometer", 103, PA1),
       // new Sensor("potentiometer", 104, PA2),
-      // new Sensor("force", 105, PA1),
+      new Sensor("force", 105, PA4),
       // new Sensor("ax", 106, 0, PB12),
       // new Sensor("ay", 107, 0, PB14),
       // new Sensor("sonar", 110, PB15, PB5)
@@ -154,6 +154,14 @@ public:
     } else {
       Serial.println("Succesfully connected to VL53L0X!");
     }
+  }
+
+  static void writeSerialMidiMessage(uint8_t statusCode, uint8_t controllerNumber, uint8_t sensorValue, HardwareSerial *Serial2) {
+    static const byte rightGuillemet[] = { 0xC2, 0xBB };
+    Serial2->write(char(statusCode));
+    Serial2->write(char(controllerNumber));
+    Serial2->write(char(sensorValue));
+    Serial2->write(rightGuillemet, sizeof(rightGuillemet));
   }
 };
 

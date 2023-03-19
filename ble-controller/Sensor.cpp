@@ -281,15 +281,15 @@ void Sensor::debounce(MPU6050 *accelgyro, Adafruit_VL53L0X *lox) {
 //       serverInstance->controlChange(_channel, _controllerNumber, char(this->currentValue));
 //     }
 //   }
-//   if (this->_midiMessage == "gate") {
-//     if (this->toggleStatus != this->previousToggleStatus) {
-//       if (this->toggleStatus) {
-//         serverInstance->noteOn(_channel, char(60), char(127));
-//       } else {
-//         serverInstance->noteOff(_channel, char(60), char(127));
-//       }
+// if (this->_midiMessage == "gate") {
+//   if (this->toggleStatus != this->previousToggleStatus) {
+//     if (this->toggleStatus) {
+//       serverInstance->noteOn(_channel, char(60), char(127));
+//     } else {
+//       serverInstance->noteOff(_channel, char(60), char(127));
 //     }
 //   }
+// }
 //   if (this->_midiMessage == "pitchBend") {
 //     if (this->currentValue != this->previousValue) {
 //       serverInstance->pitchBend(_channel, this->lsb, this->msb);
@@ -298,32 +298,24 @@ void Sensor::debounce(MPU6050 *accelgyro, Adafruit_VL53L0X *lox) {
 // }
 
 void Sensor::sendSerialMidiMessage(HardwareSerial *Serial2) {
-  static const byte rightGuillemet[] = { 0xC2, 0xBB };
-  if (this->currentValue != this->previousValue) {
-    Serial.println("Sending MIDI data: ");
-    if (_midiMessage == "controlChange") {
-      //TODO: see why this approach doesn't work
-      // const std::string message = this->_statusCode + this->_controllerNumber + this->currentValue + "\n";
-      // Serial2->write(message.c_str());
-      Serial2->write(char(this->_statusCode));
-      Serial2->write(char(this->_controllerNumber));
-      Serial2->write(char(this->currentValue));
-      Serial2->write(rightGuillemet, sizeof(rightGuillemet));
+  if (this->_midiMessage == "controlChange") {
+    Serial.print("Sending MIDI data for midi message: ");
+    Serial.println(this->_midiMessage.c_str());
+    if (this->currentValue != this->previousValue) {
+      Sensor::writeSerialMidiMessage(this->_statusCode, this->_controllerNumber, this->currentValue, Serial2);
     }
   }
-  // if (_midiMessage == "gate") {
-  //   if (this->toggleStatus != this->previousToggleStatus) {
-  //     if (this->toggleStatus) {
-  //       Serial.write(char(144));
-  //       Serial.write(char(60));
-  //       Serial.write(char(127));
-  //     } else {
-  //       Serial.write(char(128));
-  //       Serial.write(char(60));
-  //       Serial.write(char(127));
-  //     }
-  //   }
-  // }
+  if (this->_midiMessage == "gate") {
+    Serial.print("Sending MIDI data for midi message: ");
+    Serial.println(this->_midiMessage.c_str());
+    if (this->toggleStatus != this->previousToggleStatus) {
+      if (this->toggleStatus) {
+        Sensor::writeSerialMidiMessage(144, 60, 127, Serial2);
+      } else {
+        Sensor::writeSerialMidiMessage(128, 60, 127, Serial2);
+      }
+    }
+  }
 }
 
 // struct Value {
