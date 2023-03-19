@@ -298,6 +298,7 @@ void Sensor::debounce(MPU6050 *accelgyro, Adafruit_VL53L0X *lox) {
 // }
 
 void Sensor::sendSerialMidiMessage(HardwareSerial *Serial2) {
+  static const byte rightGuillemet[] = { 0xC2, 0xBB };
   if (this->currentValue != this->previousValue) {
     Serial.println("Sending MIDI data: ");
     if (_midiMessage == "controlChange") {
@@ -307,7 +308,6 @@ void Sensor::sendSerialMidiMessage(HardwareSerial *Serial2) {
       Serial2->write(char(this->_statusCode));
       Serial2->write(char(this->_controllerNumber));
       Serial2->write(char(this->currentValue));
-      const byte rightGuillemet[] = { 0xC2, 0xBB };
       Serial2->write(rightGuillemet, sizeof(rightGuillemet));
     }
   }
