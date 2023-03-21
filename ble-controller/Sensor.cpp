@@ -6,50 +6,65 @@
 #include <map>
 // #include <BLEMidi.h>
 
-struct InitialValue {
-  int16_t floor;
-  int16_t ceil;
-  int16_t threshold;
-  int16_t debounce;
+static const int IMU_FLOOR = 60;
+static const int IMU_CEIL = 15700;
+static const int IMU_FILTER_THRESHOLD = 80;
 
-  int16_t getValue(std::string &valueType) {
-    if (valueType == "floor") {
-      return floor;
-    }
-    if (valueType == "ceil") {
-      return ceil;
-    }
-    if (valueType == "threshold") {
-      return threshold;
-    }
-    if (valueType == "debounce") {
-      return debounce;
-    }
-    return -1;
-  }
-};
+int16_t Sensor::getFilterThreshold(std::string &type) {
+  static std::map<std::string, int> filterThresholdValues = {
+    { "potentiometer", 30 },
+    { "force", 1 },
+    { "sonar", 1 },
+    { "ax", IMU_FILTER_THRESHOLD },
+    { "ay", IMU_FILTER_THRESHOLD },
+    { "az", IMU_FILTER_THRESHOLD },
+    { "gx", IMU_FILTER_THRESHOLD },
+    { "gy", IMU_FILTER_THRESHOLD },
+    { "gz", IMU_FILTER_THRESHOLD },
+    { "infrared", 2 },
+  };
+  return filterThresholdValues[type];
+}
 
-static std::map<std::string, int> IMU_CONSTANTS = {
-  { "floor", 60 },
-  { "ceil", 15700 },
-  { "filter_threshold", 80 },
-  { "debounce_threshold", 0 }
-};
 
-static std::map<std::string, InitialValue> values = {
-  { "potentiometer", { 20, 1023, 30, 0 } },
-  { "force", { 20, 1023, 20, 15 } },
-  { "sonar", { 6, 30, 40, 100 } },
-  { "ax", { IMU_CONSTANTS["floor"], IMU_CONSTANTS["ceil"], IMU_CONSTANTS["filter_threshold"], IMU_CONSTANTS["debounce_threshold"] } },
-  { "ay", { IMU_CONSTANTS["floor"], IMU_CONSTANTS["ceil"], IMU_CONSTANTS["filter_threshold"], IMU_CONSTANTS["debounce_threshold"] } },
-  { "az", { IMU_CONSTANTS["floor"], IMU_CONSTANTS["ceil"], IMU_CONSTANTS["filter_threshold"], IMU_CONSTANTS["debounce_threshold"] } },
-  { "gx", { IMU_CONSTANTS["floor"], IMU_CONSTANTS["ceil"], IMU_CONSTANTS["filter_threshold"], IMU_CONSTANTS["debounce_threshold"] } },
-  { "gy", { IMU_CONSTANTS["floor"], IMU_CONSTANTS["ceil"], IMU_CONSTANTS["filter_threshold"], IMU_CONSTANTS["debounce_threshold"] } },
-  { "gz", { IMU_CONSTANTS["floor"], IMU_CONSTANTS["ceil"], IMU_CONSTANTS["filter_threshold"], IMU_CONSTANTS["debounce_threshold"] } },
-};
+int16_t Sensor::getFloor(std::string &type) {
+  static std::map<std::string, int> floorValues = {
+    { "potentiometer", 20 },
+    { "force", 300 },
+    { "sonar", 50 },
+    { "ax", IMU_FLOOR },
+    { "ay", IMU_FLOOR },
+    { "az", IMU_FLOOR },
+    { "gx", IMU_FLOOR },
+    { "gy", IMU_FLOOR },
+    { "gz", IMU_FLOOR },
+    { "infrared", 70 },
+  };
+  return floorValues[type];
+}
 
-int16_t Sensor::getInitialValue(std::string &sensorType, std::string valueType) {
-  return values[sensorType].getValue(valueType);
+int16_t Sensor::getCeil(std::string &type) {
+  static std::map<std::string, int> ceilValues = {
+    { "potentiometer", 1000 },
+    { "force", 1000 },
+    { "sonar", 65 },
+    { "ax", IMU_CEIL },
+    { "ay", IMU_CEIL },
+    { "az", IMU_CEIL },
+    { "gx", IMU_CEIL },
+    { "gy", IMU_CEIL },
+    { "gz", IMU_CEIL },
+    { "infrared", 400 },
+  };
+  return ceilValues[type];
+}
+
+uint16_t Sensor::getDebounceThreshold(std::string &type) {
+  static std::map<std::string, int> debounceThresholdValues = {
+    { "force", 15 },
+    { "sonar", 100 },
+  };
+  return debounceThresholdValues[type];
 }
 
 Sensor::Sensor(const std::string &sensorType, const uint8_t &controllerNumber, const uint8_t &pin, const uint8_t &intPin) {
@@ -72,14 +87,14 @@ Sensor::Sensor(const std::string &sensorType, const uint8_t &controllerNumber, c
   toggleStatus = false;
   previousToggleStatus = toggleStatus;
   isAlreadyPressed = false;
-  _floor = Sensor::getInitialValue(_sensorType, "floor");
-  _ceil = Sensor::getInitialValue(_sensorType, "ceil");
-  _threshold = Sensor::getInitialValue(_sensorType, "threshold");
-  _debounceThreshold = Sensor::getInitialValue(_sensorType, "debounce");
-  // _floor = Sensor::getFloor(_sensorType);
-  // _ceil = Sensor::getCeil(_sensorType);
-  // _threshold = Sensor::getFilterThreshold(_sensorType);
-  // _debounceThreshold = Sensor::getDebounceThreshold(_sensorType);
+  // _floor = Sensor::getInitialValue(_sensorType, "floor");
+  // _ceil = Sensor::getInitialValue(_sensorType, "ceil");
+  // _threshold = Sensor::getInitialValue(_sensorType, "threshold");
+  // _debounceThreshold = Sensor::getInitialValue(_sensorType, "debounce");
+  _floor = Sensor::getFloor(_sensorType);
+  _ceil = Sensor::getCeil(_sensorType);
+  _threshold = Sensor::getFilterThreshold(_sensorType);
+  _debounceThreshold = Sensor::getDebounceThreshold(_sensorType);
   msb = 0;
   lsb = 0;
 }
@@ -304,59 +319,53 @@ void Sensor::sendSerialMidiMessage(HardwareSerial *Serial2) {
 /**
   * TODO: check ESP32 compatibility with struct (wasn't working before).
   **/
-// int16_t Sensor::getFilterThreshold(std::string &type) {
-//   static std::map<std::string, int> filterThresholdValues = {
-//     { "potentiometer", 30 },
-//     { "force", 1 },
-//     { "sonar", 1 },
-//     { "ax", IMU_CONSTANTS["filter_threshold"] },
-//     { "ay", IMU_CONSTANTS["filter_threshold"] },
-//     { "az", IMU_CONSTANTS["filter_threshold"] },
-//     { "gx", IMU_CONSTANTS["filter_threshold"] },
-//     { "gy", IMU_CONSTANTS["filter_threshold"] },
-//     { "gz", IMU_CONSTANTS["filter_threshold"] },
-//     { "infrared", 2 },
-//   };
-//   return filterThresholdValues[type];
-// }
+// static std::map<std::string, int> IMU_CONSTANTS = {
+//   { "floor", 60 },
+//   { "ceil", 15700 },
+//   { "filter_threshold", 80 },
+//   { "debounce_threshold", 0 }
+// };
 
+// struct InitialValue {
+//   int16_t floor;
+//   int16_t ceil;
+//   int16_t threshold;
+//   int16_t debounce;
 
-// int16_t Sensor::getFloor(std::string &type) {
-//   static std::map<std::string, int> floorValues = {
-//     { "potentiometer", 20 },
-//     { "force", 300 },
-//     { "sonar", 50 },
-//     { "ax", IMU_CONSTANTS["floor"] },
-//     { "ay", IMU_CONSTANTS["floor"] },
-//     { "az", IMU_CONSTANTS["floor"] },
-//     { "gx", IMU_CONSTANTS["floor"] },
-//     { "gy", IMU_CONSTANTS["floor"] },
-//     { "gz", IMU_CONSTANTS["floor"] },
-//     { "infrared", 70 },
-//   };
-//   return floorValues[type];
-// }
+//   int16_t getValue(std::string &valueType) {
+//     if (valueType == "floor") {
+//       return floor;
+//     }
+//     if (valueType == "ceil") {
+//       return ceil;
+//     }
+//     if (valueType == "threshold") {
+//       return threshold;
+//     }
+//     if (valueType == "debounce") {
+//       return debounce;
+//     }
+//     return -1;
+//   }
+// };
 
-// int16_t Sensor::getCeil(std::string &type) {
-//   static std::map<std::string, int> ceilValues = {
-//     { "potentiometer", 1000 },
-//     { "force", 1000 },
-//     { "sonar", 65 },
-//     { "ax", IMU_CONSTANTS["ceil"] },
-//     { "ay", IMU_CONSTANTS["ceil"] },
-//     { "az", IMU_CONSTANTS["ceil"] },
-//     { "gx", IMU_CONSTANTS["ceil"] },
-//     { "gy", IMU_CONSTANTS["ceil"] },
-//     { "gz", IMU_CONSTANTS["ceil"] },
-//     { "infrared", 400 },
-//   };
-//   return ceilValues[type];
-// }
+// static const int IMU_FLOOR = 60;
+// static const int IMU_CEIL = 15700;
+// static const int IMU_FILTER_THRESHOLD = 80;
+// static const int IMU_DEBOUNCE_THRESHOLD = 0;
 
-// uint16_t Sensor::getDebounceThreshold(std::string &type) {
-//   static std::map<std::string, int> debounceThresholdValues = {
-//     { "force", 15 },
-//     { "sonar", 100 },
-//   };
-//   return debounceThresholdValues[type];
+// static std::map<std::string, InitialValue> values = {
+//   { "potentiometer", { 20, 1023, 30, 0 } },
+//   { "force", { 20, 1023, 20, 15 } },
+//   { "sonar", { 6, 30, 40, 100 } },
+//   { "ax", { IMU_FLOOR, IMU_CEIL, IMU_FILTER_THRESHOLD, IMU_DEBOUNCE_THRESHOLD } },
+//   { "ay", { IMU_FLOOR, IMU_CEIL, IMU_FILTER_THRESHOLD, IMU_DEBOUNCE_THRESHOLD } },
+//   { "az", { IMU_FLOOR, IMU_CEIL, IMU_FILTER_THRESHOLD, IMU_DEBOUNCE_THRESHOLD } },
+//   { "gx", { IMU_FLOOR, IMU_CEIL, IMU_FILTER_THRESHOLD, IMU_DEBOUNCE_THRESHOLD } },
+//   { "gy", { IMU_FLOOR, IMU_CEIL, IMU_FILTER_THRESHOLD, IMU_DEBOUNCE_THRESHOLD } },
+//   { "gz", { IMU_FLOOR, IMU_CEIL, IMU_FILTER_THRESHOLD, IMU_DEBOUNCE_THRESHOLD } },
+// };
+
+// int16_t Sensor::getInitialValue(std::string &sensorType, std::string valueType) {
+//   return values[sensorType].getValue(valueType);
 // }
