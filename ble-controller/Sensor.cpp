@@ -6,6 +6,12 @@
 #include <vector>
 #include <map>
 
+static std::map<std::string, int> IMU_CONSTANTS = {
+  { "floor", 60 },
+  { "ceil", 15700 },
+  { "filter_threshold", 80 }
+};
+
 uint16_t Sensor::getDebounceThreshold(std::string &type) {
   static std::map<std::string, int> debounceThresholdValues = {
     { "force", 15 },
@@ -14,17 +20,18 @@ uint16_t Sensor::getDebounceThreshold(std::string &type) {
   return debounceThresholdValues[type];
 }
 
+
 int16_t Sensor::getFilterThreshold(std::string &type) {
   static std::map<std::string, int> filterThresholdValues = {
     { "potentiometer", 30 },
     { "force", 1 },
     { "sonar", 1 },
-    { "ax", 40 },
-    { "ay", 40 },
-    { "az", 40 },
-    { "gx", 40 },
-    { "gy", 40 },
-    { "gz", 40 },
+    { "ax", IMU_CONSTANTS["filter_threshold"] },
+    { "ay", IMU_CONSTANTS["filter_threshold"] },
+    { "az", IMU_CONSTANTS["filter_threshold"] },
+    { "gx", IMU_CONSTANTS["filter_threshold"] },
+    { "gy", IMU_CONSTANTS["filter_threshold"] },
+    { "gz", IMU_CONSTANTS["filter_threshold"] },
     { "infrared", 2 },
   };
   return filterThresholdValues[type];
@@ -36,12 +43,12 @@ int16_t Sensor::getFloor(std::string &type) {
     { "potentiometer", 20 },
     { "force", 300 },
     { "sonar", 50 },
-    { "ax", 50 },
-    { "ay", 50 },
-    { "az", 50 },
-    { "gx", 50 },
-    { "gy", 50 },
-    { "gz", 50 },
+    { "ax", IMU_CONSTANTS["floor"] },
+    { "ay", IMU_CONSTANTS["floor"] },
+    { "az", IMU_CONSTANTS["floor"] },
+    { "gx", IMU_CONSTANTS["floor"] },
+    { "gy", IMU_CONSTANTS["floor"] },
+    { "gz", IMU_CONSTANTS["floor"] },
     { "infrared", 70 },
   };
   return floorValues[type];
@@ -52,22 +59,16 @@ int16_t Sensor::getCeil(std::string &type) {
     { "potentiometer", 1000 },
     { "force", 1000 },
     { "sonar", 65 },
-    { "ax", 15500 },
-    { "ay", 15500 },
-    { "az", 15500 },
-    { "gx", 15500 },
-    { "gy", 15500 },
-    { "gz", 15500 },
+    { "ax", IMU_CONSTANTS["ceil"] },
+    { "ay", IMU_CONSTANTS["ceil"] },
+    { "az", IMU_CONSTANTS["ceil"] },
+    { "gx", IMU_CONSTANTS["ceil"] },
+    { "gy", IMU_CONSTANTS["ceil"] },
+    { "gz", IMU_CONSTANTS["ceil"] },
     { "infrared", 400 },
   };
   return ceilValues[type];
 }
-
-static std::map<std::string, std::string> midiMessages = {
-  { "controlChange", "controlChange" },
-  { "gate", "gate" },
-  { "pitchBend", "pitchBend" },
-};
 
 Sensor::Sensor(const std::string &sensorType, const uint8_t &controllerNumber, const uint8_t &pin, const uint8_t &intPin) {
   _pin = pin;
@@ -298,8 +299,6 @@ void Sensor::debounce(MPU6050 *accelgyro, Adafruit_VL53L0X *lox) {
 // }
 
 void Sensor::sendSerialMidiMessage(HardwareSerial *Serial2) {
-  Serial.print("Sending MIDI data for midi message: ");
-  Serial.println(this->_midiMessage.c_str());
   if (this->_midiMessage == "controlChange") {
     if (this->currentValue != this->previousValue) {
       Sensor::writeSerialMidiMessage(this->_statusCode, this->_controllerNumber, this->currentValue, Serial2);
@@ -326,8 +325,8 @@ void Sensor::sendSerialMidiMessage(HardwareSerial *Serial2) {
 //   { "potentiometer", { 20, 1023, 30 } },
 //   { "force", { 20, 1023, 20 } },
 //   { "sonar", { 6, 30, 40 } },
-//   { "ax", { 100, 15500, 50 } },
-//   { "ay", { 100, 15500, 50 } },
-//   { "gx", { 100, 15500, 50 } },
-//   { "gy", { 100, 15500, 50 } },
+//   { "ax", { 100, IMU_CONSTANTS["ceil"], 50 } },
+//   { "ay", { 100, IMU_CONSTANTS["ceil"], 50 } },
+//   { "gx", { 100, IMU_CONSTANTS["ceil"], 50 } },
+//   { "gy", { 100, IMU_CONSTANTS["ceil"], 50 } },
 // };

@@ -19,14 +19,14 @@ std::vector<Sensor*> SENSORS = Sensor::initializeStm32Sensors();
 HardwareSerial Serial2(PA3, PA2);  //RX, TX
 
 void setup() {
-  delay(1000);
+  delay(500);
   // const uint32_t Freq = Utils::setAndGetEsp32CpuFrequency(240);
   Serial.begin(230400);
-  Serial2.begin(115200);
+  Serial2.begin(230400);
   Serial.println("Starting I2C bus...");
   Wire.begin();
   // Wire.setClock(200000);
-  delay(500);
+  // delay(500);
 
   analogReadResolution(10);
 
@@ -44,15 +44,11 @@ void setup() {
 
   // Sensor::testInfraredSensorConnection(lox, 0x29, ERROR_LED, &Wire);
 
-  delay(200);
-
   Sensor::testAccelgiroConnection(accelgyro);
-
-  delay(200);
 
   // BLEMidiServer.begin("The performer");
 
-  delay(500);
+  // delay(500);
 
   Serial.println("System ready <(':'<)");
 }

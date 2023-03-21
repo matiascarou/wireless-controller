@@ -147,6 +147,7 @@ public:
     } else {
       Serial.println("There was a problem with the IMU initialization");
     }
+    delay(100);
   }
 
   static void testInfraredSensorConnection(Adafruit_VL53L0X &lox, uint8_t i2c_addr, const uint8_t &ERROR_LED, TwoWire *i2c = &Wire) {
@@ -156,15 +157,39 @@ public:
     } else {
       Serial.println("Succesfully connected to VL53L0X!");
     }
+    delay(100);
   }
 
   static void writeSerialMidiMessage(uint8_t statusCode, uint8_t controllerNumber, uint8_t sensorValue, HardwareSerial *Serial2) {
-    static const byte rightGuillemet[] = { 0xC2, 0xBB };
+    // Serial.print("Sending MIDI message: ");
+    // Serial.print(statusCode);
+    // Serial.print("\t");
+    // Serial.print(controllerNumber);
+    // Serial.print("\t");
+    // Serial.println(sensorValue);
+    static const byte rightGuillemet[] = { 0xC2, 0xBB };  //11000010, 10111011
     Serial2->write(char(statusCode));
     Serial2->write(char(controllerNumber));
     Serial2->write(char(sensorValue));
     Serial2->write(rightGuillemet, sizeof(rightGuillemet));
   }
+
+
+  // static void writeSerialMidiMessage(uint8_t statusCode, uint8_t controllerNumber, uint8_t sensorValue, HardwareSerial *Serial2) {
+  //   uint16_t rightGuillemet = 0xBB00 | 0xC2;  // combine the two bytes into a single uint16_t value
+  //   Serial2->write(&statusCode, 1);
+  //   Serial2->write(&controllerNumber, 1);
+  //   Serial2->write(&sensorValue, 1);
+  //   Serial2->write(reinterpret_cast<uint8_t *>(&rightGuillemet), 2);  // reinterpret the uint16_t value as a byte array and send 2 bytes
+  // }
+
+  // static void writeSerialMidiMessage(uint8_t statusCode, uint8_t controllerNumber, uint8_t sensorValue, HardwareSerial *Serial2) {
+  //   char rightGuillemet[] = u8"\u00BB";
+  //   Serial2->write(char(statusCode));
+  //   Serial2->write(char(controllerNumber));
+  //   Serial2->write(char(sensorValue));
+  //   Serial2->write(rightGuillemet);  // reinterpret the uint16_t value as a byte array and send 2 bytes
+  // }
 };
 
 
