@@ -1,10 +1,11 @@
 #include "Sensor.h"
 #include "MPU6050.h"
-// #include <BLEMidi.h>
 #include "Adafruit_VL53L0X.h"
 #include <math.h>
 #include <vector>
 #include <map>
+// #include <BLEMidi.h>
+
 
 static std::map<std::string, int> IMU_CONSTANTS = {
   { "floor", 60 },
@@ -12,62 +13,47 @@ static std::map<std::string, int> IMU_CONSTANTS = {
   { "filter_threshold", 80 }
 };
 
+struct Value {
+  int16_t floor;
+  int16_t ceil;
+  int16_t threshold;
+
+  int16_t getValue(std::string &valueType) {
+    if (valueType == "floor") {
+      return floor;
+    }
+    if (valueType == "ceil") {
+      return ceil;
+    }
+    if (valueType == "threshold") {
+      return threshold;
+    }
+    return -1;
+  }
+};
+
+static std::map<std::string, Value> values = {
+  { "potentiometer", { 20, 1023, 30 } },
+  { "force", { 20, 1023, 20 } },
+  { "sonar", { 6, 30, 40 } },
+  { "ax", { IMU_CONSTANTS["floor"], IMU_CONSTANTS["ceil"], IMU_CONSTANTS["filter_threshold"] } },
+  { "ay", { IMU_CONSTANTS["floor"], IMU_CONSTANTS["ceil"], IMU_CONSTANTS["filter_threshold"] } },
+  { "az", { IMU_CONSTANTS["floor"], IMU_CONSTANTS["ceil"], IMU_CONSTANTS["filter_threshold"] } },
+  { "gx", { IMU_CONSTANTS["floor"], IMU_CONSTANTS["ceil"], IMU_CONSTANTS["filter_threshold"] } },
+  { "gy", { IMU_CONSTANTS["floor"], IMU_CONSTANTS["ceil"], IMU_CONSTANTS["filter_threshold"] } },
+  { "gz", { IMU_CONSTANTS["floor"], IMU_CONSTANTS["ceil"], IMU_CONSTANTS["filter_threshold"] } },
+};
+
+int16_t Sensor::getConstValue(std::string &sensorType, std::string valueType) {
+  return values[sensorType].getValue(valueType);
+}
+
 uint16_t Sensor::getDebounceThreshold(std::string &type) {
   static std::map<std::string, int> debounceThresholdValues = {
     { "force", 15 },
     { "sonar", 100 },
   };
   return debounceThresholdValues[type];
-}
-
-
-int16_t Sensor::getFilterThreshold(std::string &type) {
-  static std::map<std::string, int> filterThresholdValues = {
-    { "potentiometer", 30 },
-    { "force", 1 },
-    { "sonar", 1 },
-    { "ax", IMU_CONSTANTS["filter_threshold"] },
-    { "ay", IMU_CONSTANTS["filter_threshold"] },
-    { "az", IMU_CONSTANTS["filter_threshold"] },
-    { "gx", IMU_CONSTANTS["filter_threshold"] },
-    { "gy", IMU_CONSTANTS["filter_threshold"] },
-    { "gz", IMU_CONSTANTS["filter_threshold"] },
-    { "infrared", 2 },
-  };
-  return filterThresholdValues[type];
-}
-
-
-int16_t Sensor::getFloor(std::string &type) {
-  static std::map<std::string, int> floorValues = {
-    { "potentiometer", 20 },
-    { "force", 300 },
-    { "sonar", 50 },
-    { "ax", IMU_CONSTANTS["floor"] },
-    { "ay", IMU_CONSTANTS["floor"] },
-    { "az", IMU_CONSTANTS["floor"] },
-    { "gx", IMU_CONSTANTS["floor"] },
-    { "gy", IMU_CONSTANTS["floor"] },
-    { "gz", IMU_CONSTANTS["floor"] },
-    { "infrared", 70 },
-  };
-  return floorValues[type];
-}
-
-int16_t Sensor::getCeil(std::string &type) {
-  static std::map<std::string, int> ceilValues = {
-    { "potentiometer", 1000 },
-    { "force", 1000 },
-    { "sonar", 65 },
-    { "ax", IMU_CONSTANTS["ceil"] },
-    { "ay", IMU_CONSTANTS["ceil"] },
-    { "az", IMU_CONSTANTS["ceil"] },
-    { "gx", IMU_CONSTANTS["ceil"] },
-    { "gy", IMU_CONSTANTS["ceil"] },
-    { "gz", IMU_CONSTANTS["ceil"] },
-    { "infrared", 400 },
-  };
-  return ceilValues[type];
 }
 
 Sensor::Sensor(const std::string &sensorType, const uint8_t &controllerNumber, const uint8_t &pin, const uint8_t &intPin) {
@@ -90,9 +76,12 @@ Sensor::Sensor(const std::string &sensorType, const uint8_t &controllerNumber, c
   toggleStatus = false;
   previousToggleStatus = toggleStatus;
   isAlreadyPressed = false;
-  _floor = Sensor::getFloor(_sensorType);
-  _ceil = Sensor::getCeil(_sensorType);
-  _threshold = Sensor::getFilterThreshold(_sensorType);
+  _floor = Sensor::getConstValue(_sensorType, "floor");
+  _ceil = Sensor::getConstValue(_sensorType, "ceil");
+  _threshold = Sensor::getConstValue(_sensorType, "threshold");
+  // _floor = Sensor::getFloor(_sensorType);
+  // _ceil = Sensor::getCeil(_sensorType);
+  // _threshold = Sensor::getFilterThreshold(_sensorType);
   _debounceThreshold = Sensor::getDebounceThreshold(_sensorType);
   msb = 0;
   lsb = 0;
@@ -276,6 +265,23 @@ void Sensor::debounce(MPU6050 *accelgyro, Adafruit_VL53L0X *lox) {
   }
 }
 
+void Sensor::sendSerialMidiMessage(HardwareSerial *Serial2) {
+  if (this->_midiMessage == "controlChange") {
+    if (this->currentValue != this->previousValue) {
+      Sensor::writeSerialMidiMessage(this->_statusCode, this->_controllerNumber, this->currentValue, Serial2);
+    }
+  }
+  if (this->_midiMessage == "gate") {
+    if (this->toggleStatus != this->previousToggleStatus) {
+      if (this->toggleStatus) {
+        Sensor::writeSerialMidiMessage(144, 60, 127, Serial2);
+      } else {
+        Sensor::writeSerialMidiMessage(128, 60, 127, Serial2);
+      }
+    }
+  }
+}
+
 // void Sensor::sendBleMidiMessage(BLEMidiServerClass *serverInstance) {
 //   if (this->_midiMessage == "controlChange") {
 //     if (this->currentValue != this->previousValue) {
@@ -298,35 +304,54 @@ void Sensor::debounce(MPU6050 *accelgyro, Adafruit_VL53L0X *lox) {
 //   }
 // }
 
-void Sensor::sendSerialMidiMessage(HardwareSerial *Serial2) {
-  if (this->_midiMessage == "controlChange") {
-    if (this->currentValue != this->previousValue) {
-      Sensor::writeSerialMidiMessage(this->_statusCode, this->_controllerNumber, this->currentValue, Serial2);
-    }
-  }
-  if (this->_midiMessage == "gate") {
-    if (this->toggleStatus != this->previousToggleStatus) {
-      if (this->toggleStatus) {
-        Sensor::writeSerialMidiMessage(144, 60, 127, Serial2);
-      } else {
-        Sensor::writeSerialMidiMessage(128, 60, 127, Serial2);
-      }
-    }
-  }
-}
+/**
+  * TODO: check ESP32 compatibility with struct (wasn't working before).
+  **/
+// int16_t Sensor::getFilterThreshold(std::string &type) {
+//   static std::map<std::string, int> filterThresholdValues = {
+//     { "potentiometer", 30 },
+//     { "force", 1 },
+//     { "sonar", 1 },
+//     { "ax", IMU_CONSTANTS["filter_threshold"] },
+//     { "ay", IMU_CONSTANTS["filter_threshold"] },
+//     { "az", IMU_CONSTANTS["filter_threshold"] },
+//     { "gx", IMU_CONSTANTS["filter_threshold"] },
+//     { "gy", IMU_CONSTANTS["filter_threshold"] },
+//     { "gz", IMU_CONSTANTS["filter_threshold"] },
+//     { "infrared", 2 },
+//   };
+//   return filterThresholdValues[type];
+// }
 
-// struct Value {
-//   int16_t floor;
-//   int16_t ceil;
-//   int16_t threshold;
-// };
 
-// static std::map<std::string, Value> values = {
-//   { "potentiometer", { 20, 1023, 30 } },
-//   { "force", { 20, 1023, 20 } },
-//   { "sonar", { 6, 30, 40 } },
-//   { "ax", { 100, IMU_CONSTANTS["ceil"], 50 } },
-//   { "ay", { 100, IMU_CONSTANTS["ceil"], 50 } },
-//   { "gx", { 100, IMU_CONSTANTS["ceil"], 50 } },
-//   { "gy", { 100, IMU_CONSTANTS["ceil"], 50 } },
-// };
+// int16_t Sensor::getFloor(std::string &type) {
+//   static std::map<std::string, int> floorValues = {
+//     { "potentiometer", 20 },
+//     { "force", 300 },
+//     { "sonar", 50 },
+//     { "ax", IMU_CONSTANTS["floor"] },
+//     { "ay", IMU_CONSTANTS["floor"] },
+//     { "az", IMU_CONSTANTS["floor"] },
+//     { "gx", IMU_CONSTANTS["floor"] },
+//     { "gy", IMU_CONSTANTS["floor"] },
+//     { "gz", IMU_CONSTANTS["floor"] },
+//     { "infrared", 70 },
+//   };
+//   return floorValues[type];
+// }
+
+// int16_t Sensor::getCeil(std::string &type) {
+//   static std::map<std::string, int> ceilValues = {
+//     { "potentiometer", 1000 },
+//     { "force", 1000 },
+//     { "sonar", 65 },
+//     { "ax", IMU_CONSTANTS["ceil"] },
+//     { "ay", IMU_CONSTANTS["ceil"] },
+//     { "az", IMU_CONSTANTS["ceil"] },
+//     { "gx", IMU_CONSTANTS["ceil"] },
+//     { "gy", IMU_CONSTANTS["ceil"] },
+//     { "gz", IMU_CONSTANTS["ceil"] },
+//     { "infrared", 400 },
+//   };
+//   return ceilValues[type];
+// }

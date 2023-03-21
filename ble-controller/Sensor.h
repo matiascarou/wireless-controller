@@ -2,11 +2,11 @@
 #define Sensor_h
 #include <Arduino.h>
 #include "MPU6050.h"
-// #include <BLEMidi.h>
 #include "Adafruit_VL53L0X.h"
 #include "Wire.h"
 #include <vector>
 #include <map>
+// #include <BLEMidi.h>
 
 class Sensor {
 private:
@@ -25,6 +25,7 @@ private:
   int16_t _threshold;
   int16_t _floor;
   int16_t _ceil;
+  int16_t getConstValue(std::string &sensorType, std::string valueType);
   int16_t getFloor(std::string &type);
   int16_t getFilterThreshold(std::string &type);
   int16_t getCeil(std::string &type);
