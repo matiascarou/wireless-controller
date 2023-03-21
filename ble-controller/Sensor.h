@@ -6,6 +6,7 @@
 #include "Wire.h"
 #include <vector>
 #include <map>
+// #include "Utils.h"
 // #include <BLEMidi.h>
 
 class Sensor {
@@ -162,12 +163,7 @@ public:
   }
 
   static void writeSerialMidiMessage(uint8_t statusCode, uint8_t controllerNumber, uint8_t sensorValue, HardwareSerial *Serial2) {
-    // Serial.print("Sending MIDI message: ");
-    // Serial.print(statusCode);
-    // Serial.print("\t");
-    // Serial.print(controllerNumber);
-    // Serial.print("\t");
-    // Serial.println(sensorValue);
+    // Utils::printMessage(statusCode, controllerNumber, sensorValue);
     static const byte rightGuillemet[] = { 0xC2, 0xBB };  //11000010, 10111011
     Serial2->write(char(statusCode));
     Serial2->write(char(controllerNumber));

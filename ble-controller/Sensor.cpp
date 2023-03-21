@@ -87,14 +87,14 @@ Sensor::Sensor(const std::string &sensorType, const uint8_t &controllerNumber, c
   toggleStatus = false;
   previousToggleStatus = toggleStatus;
   isAlreadyPressed = false;
-  // _floor = Sensor::getInitialValue(_sensorType, "floor");
-  // _ceil = Sensor::getInitialValue(_sensorType, "ceil");
-  // _threshold = Sensor::getInitialValue(_sensorType, "threshold");
-  // _debounceThreshold = Sensor::getInitialValue(_sensorType, "debounce");
   _floor = Sensor::getFloor(_sensorType);
   _ceil = Sensor::getCeil(_sensorType);
   _threshold = Sensor::getFilterThreshold(_sensorType);
   _debounceThreshold = Sensor::getDebounceThreshold(_sensorType);
+  // _floor = Sensor::getInitialValue(_sensorType, "floor");
+  // _ceil = Sensor::getInitialValue(_sensorType, "ceil");
+  // _threshold = Sensor::getInitialValue(_sensorType, "threshold");
+  // _debounceThreshold = Sensor::getInitialValue(_sensorType, "debounce");
   msb = 0;
   lsb = 0;
 }
@@ -315,6 +315,8 @@ void Sensor::sendSerialMidiMessage(HardwareSerial *Serial2) {
 //     }
 //   }
 // }
+
+//// //// //// //// //// //// //// //// //// //// //// //// //// ////
 
 /**
   * TODO: check ESP32 compatibility with struct (wasn't working before).

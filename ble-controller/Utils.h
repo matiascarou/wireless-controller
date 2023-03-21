@@ -2,6 +2,12 @@
 #define UTILS_H
 
 namespace Utils {
+// static void setAndGetEsp32CpuFrequency(const uint32_t& Freq) {
+//   setCpuFrequencyMhz(Freq);
+//   const uint32_t esp32ProcessorSpeed = getCpuFrequencyMhz();
+//   delay(500);
+//   return esp32ProcessorSpeed;
+// }
 static void printRuntimeOverrallValue(int& counter, int& timeBuffer, unsigned long& previousTime, unsigned long& currentTime) {
   static const int CYCLES_AMOUNT = 20;
   if (counter % CYCLES_AMOUNT == 0 && counter != 0) {
@@ -20,12 +26,6 @@ static void printRuntimeOverrallValue(int& counter, int& timeBuffer, unsigned lo
   previousTime = currentTime;
   timeBuffer += timeDiff;
   counter++;
-}
-static void setAndGetEsp32CpuFrequency(const uint32_t& Freq) {
-  setCpuFrequencyMhz(Freq);
-  const uint32_t esp32ProcessorSpeed = getCpuFrequencyMhz();
-  delay(500);
-  return esp32ProcessorSpeed;
 }
 static void checkForI2CDevices(TwoWire* wire) {
   byte error, address;
@@ -46,6 +46,14 @@ static void checkForI2CDevices(TwoWire* wire) {
       devicesFound++;
     }
   }
+}
+static void printMessage(uint8_t& byte1, uint8_t& byte2, uint8_t& byte3) {
+  Serial.print("Sending MIDI message: ");
+  Serial.print(byte1);
+  Serial.print("\t");
+  Serial.print(byte2);
+  Serial.print("\t");
+  Serial.println(byte3);
 }
 }
 
