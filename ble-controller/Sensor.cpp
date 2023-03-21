@@ -33,22 +33,22 @@ static std::map<std::string, int> IMU_CONSTANTS = {
   { "floor", 60 },
   { "ceil", 15700 },
   { "filter_threshold", 80 },
-  { "debounce", 0 }
+  { "debounce_threshold", 0 }
 };
 
 static std::map<std::string, InitialValue> values = {
   { "potentiometer", { 20, 1023, 30, 0 } },
   { "force", { 20, 1023, 20, 15 } },
   { "sonar", { 6, 30, 40, 100 } },
-  { "ax", { IMU_CONSTANTS["floor"], IMU_CONSTANTS["ceil"], IMU_CONSTANTS["filter_threshold"], IMU_CONSTANTS["debounce"] } },
-  { "ay", { IMU_CONSTANTS["floor"], IMU_CONSTANTS["ceil"], IMU_CONSTANTS["filter_threshold"], IMU_CONSTANTS["debounce"] } },
-  { "az", { IMU_CONSTANTS["floor"], IMU_CONSTANTS["ceil"], IMU_CONSTANTS["filter_threshold"], IMU_CONSTANTS["debounce"] } },
-  { "gx", { IMU_CONSTANTS["floor"], IMU_CONSTANTS["ceil"], IMU_CONSTANTS["filter_threshold"], IMU_CONSTANTS["debounce"] } },
-  { "gy", { IMU_CONSTANTS["floor"], IMU_CONSTANTS["ceil"], IMU_CONSTANTS["filter_threshold"], IMU_CONSTANTS["debounce"] } },
-  { "gz", { IMU_CONSTANTS["floor"], IMU_CONSTANTS["ceil"], IMU_CONSTANTS["filter_threshold"], IMU_CONSTANTS["debounce"] } },
+  { "ax", { IMU_CONSTANTS["floor"], IMU_CONSTANTS["ceil"], IMU_CONSTANTS["filter_threshold"], IMU_CONSTANTS["debounce_threshold"] } },
+  { "ay", { IMU_CONSTANTS["floor"], IMU_CONSTANTS["ceil"], IMU_CONSTANTS["filter_threshold"], IMU_CONSTANTS["debounce_threshold"] } },
+  { "az", { IMU_CONSTANTS["floor"], IMU_CONSTANTS["ceil"], IMU_CONSTANTS["filter_threshold"], IMU_CONSTANTS["debounce_threshold"] } },
+  { "gx", { IMU_CONSTANTS["floor"], IMU_CONSTANTS["ceil"], IMU_CONSTANTS["filter_threshold"], IMU_CONSTANTS["debounce_threshold"] } },
+  { "gy", { IMU_CONSTANTS["floor"], IMU_CONSTANTS["ceil"], IMU_CONSTANTS["filter_threshold"], IMU_CONSTANTS["debounce_threshold"] } },
+  { "gz", { IMU_CONSTANTS["floor"], IMU_CONSTANTS["ceil"], IMU_CONSTANTS["filter_threshold"], IMU_CONSTANTS["debounce_threshold"] } },
 };
 
-int16_t Sensor::getConstValue(std::string &sensorType, std::string valueType) {
+int16_t Sensor::getInitialValue(std::string &sensorType, std::string valueType) {
   return values[sensorType].getValue(valueType);
 }
 
@@ -72,10 +72,10 @@ Sensor::Sensor(const std::string &sensorType, const uint8_t &controllerNumber, c
   toggleStatus = false;
   previousToggleStatus = toggleStatus;
   isAlreadyPressed = false;
-  _floor = Sensor::getConstValue(_sensorType, "floor");
-  _ceil = Sensor::getConstValue(_sensorType, "ceil");
-  _threshold = Sensor::getConstValue(_sensorType, "threshold");
-  _debounceThreshold = Sensor::getConstValue(_sensorType, "debounce");
+  _floor = Sensor::getInitialValue(_sensorType, "floor");
+  _ceil = Sensor::getInitialValue(_sensorType, "ceil");
+  _threshold = Sensor::getInitialValue(_sensorType, "threshold");
+  _debounceThreshold = Sensor::getInitialValue(_sensorType, "debounce");
   // _floor = Sensor::getFloor(_sensorType);
   // _ceil = Sensor::getCeil(_sensorType);
   // _threshold = Sensor::getFilterThreshold(_sensorType);

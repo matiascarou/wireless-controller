@@ -25,7 +25,7 @@ private:
   int16_t _threshold;
   int16_t _floor;
   int16_t _ceil;
-  int16_t getConstValue(std::string &sensorType, std::string valueType);
+  int16_t getInitialValue(std::string &sensorType, std::string valueType);
   int16_t getFloor(std::string &type);
   int16_t getFilterThreshold(std::string &type);
   int16_t getCeil(std::string &type);
