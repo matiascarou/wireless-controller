@@ -72,7 +72,6 @@ void loop() {
   // Sensor::runPitchBendLogic(infraredSensor, isBendActive, pitchBendLedState, PITCH_BEND_LED);
   for (Sensor* SENSOR : SENSORS) {
     if (SENSOR->isSwitchActive()) {
-      const unsigned long sensorInitialRuntime = millis();
       SENSOR->setMeasuresCounter(1);
       int16_t rawValue = SENSOR->getRawValue(&accelgyro, &lox);
       SENSOR->setPreviousRawValue(rawValue);
