@@ -63,6 +63,7 @@ bool lastButtonState = false;
 bool toggleStatus = false;
 bool pitchBendLedState = false;
 
+
 void loop() {
   // if (BLEMidiServer.isConnected()) {
   currentTime = millis();
@@ -71,6 +72,7 @@ void loop() {
   // Sensor::runPitchBendLogic(infraredSensor, isBendActive, pitchBendLedState, PITCH_BEND_LED);
   for (Sensor* SENSOR : SENSORS) {
     if (SENSOR->isSwitchActive()) {
+      const unsigned long sensorInitialRuntime = millis();
       SENSOR->setMeasuresCounter(1);
       int16_t rawValue = SENSOR->getRawValue(&accelgyro, &lox);
       SENSOR->setPreviousRawValue(rawValue);
@@ -87,6 +89,8 @@ void loop() {
         SENSOR->sendSerialMidiMessage(&Serial2);
         SENSOR->setMeasuresCounter(0);
         SENSOR->setDataBuffer(0);
+        const uint8_t activeParents = Sensor::getActiveParents(SENSORS);
+        SENSOR->setActiveParents(activeParents);
       }
     }
   }

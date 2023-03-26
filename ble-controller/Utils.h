@@ -47,7 +47,7 @@ static void checkForI2CDevices(TwoWire* wire) {
     }
   }
 }
-static void printMessage(uint8_t& byte1, uint8_t& byte2, uint8_t& byte3) {
+static void printMidiMessage(uint8_t& byte1, uint8_t& byte2, uint8_t& byte3) {
   Serial.print("Sending MIDI message: ");
   Serial.print(byte1);
   Serial.print("\t");

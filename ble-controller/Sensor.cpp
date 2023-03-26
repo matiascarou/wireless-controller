@@ -14,7 +14,7 @@ int16_t Sensor::getFilterThreshold(std::string &type) {
   static std::map<std::string, int> filterThresholdValues = {
     { "potentiometer", 30 },
     { "force", 1 },
-    { "sonar", 1 },
+    { "sonar", 2 },
     { "ax", IMU_FILTER_THRESHOLD },
     { "ay", IMU_FILTER_THRESHOLD },
     { "az", IMU_FILTER_THRESHOLD },
@@ -30,8 +30,8 @@ int16_t Sensor::getFilterThreshold(std::string &type) {
 int16_t Sensor::getFloor(std::string &type) {
   static std::map<std::string, int> floorValues = {
     { "potentiometer", 20 },
-    { "force", 300 },
-    { "sonar", 50 },
+    { "force", 200 },
+    { "sonar", 8 },
     { "ax", IMU_FLOOR },
     { "ay", IMU_FLOOR },
     { "az", IMU_FLOOR },
@@ -47,7 +47,7 @@ int16_t Sensor::getCeil(std::string &type) {
   static std::map<std::string, int> ceilValues = {
     { "potentiometer", 1000 },
     { "force", 1000 },
-    { "sonar", 65 },
+    { "sonar", 22 },
     { "ax", IMU_CEIL },
     { "ay", IMU_CEIL },
     { "az", IMU_CEIL },
@@ -104,7 +104,7 @@ bool Sensor::isSwitchActive() {
 };
 
 bool Sensor::isAboveThreshold() {
-  return this->measuresCounter % _threshold == 0;
+  return this->measuresCounter % this->_threshold == 0;
 };
 
 void Sensor::setCurrentValue(uint8_t value) {
@@ -113,6 +113,14 @@ void Sensor::setCurrentValue(uint8_t value) {
 
 void Sensor::setThreshold(uint8_t value) {
   this->_threshold = value;
+}
+
+void Sensor::setActiveParents(uint8_t amountOfActiveParents) {
+  const int16_t initialSensorThreshold = Sensor::getFilterThreshold(this->_sensorType);
+  if (this->_sensorType == "ax" || this->_sensorType == "ay") {
+    const int16_t thresholdToSet = initialSensorThreshold / amountOfActiveParents;
+    this->_threshold = round(thresholdToSet);
+  }
 }
 
 void Sensor::setMidiMessage(std::string value) {
@@ -148,8 +156,14 @@ std::string Sensor::getSensorType() {
 }
 
 int16_t Sensor::getRawValue(MPU6050 *accelgyro, Adafruit_VL53L0X *lox) {
-  if (_sensorType == "potentiometer" || _sensorType == "force" || _sensorType == "sonar") {
+  if (_sensorType == "potentiometer" || _sensorType == "force") {
     return analogRead(_pin);
+  }
+
+  if (_sensorType == "sonar") {
+    const uint32_t pulse = pulseIn(_pin, HIGH);
+    const int16_t inches = pulse / 147;
+    return inches;
   }
 
   if (_sensorType == "infrared") {
@@ -195,7 +209,7 @@ int16_t Sensor::getRawValue(MPU6050 *accelgyro, Adafruit_VL53L0X *lox) {
 
 
 int16_t Sensor::runNonBlockingAverageFilter() {
-  return this->dataBuffer / _threshold;
+  return this->dataBuffer / this->_threshold;
 }
 
 int16_t Sensor::runBlockingAverageFilter(int measureSize, MPU6050 *accelgyro, Adafruit_VL53L0X *lox, int gap) {
@@ -256,16 +270,16 @@ int Sensor::getMappedMidiValue(int16_t actualValue, int floor, int ceil) {
 }
 
 void Sensor::debounce(MPU6050 *accelgyro, Adafruit_VL53L0X *lox) {
-  if (_sensorType == "sonar") {
-    if (this->_currentDebounceValue - this->_previousDebounceValue >= _debounceThreshold) {
-      const int16_t rawValue = this->getRawValue(accelgyro, lox);
-      const uint8_t sensorMappedValue = this->getMappedMidiValue(rawValue);
-      if (this->currentValue != sensorMappedValue) {
-        this->currentValue = this->previousValue;
-      }
-      this->_previousDebounceValue = this->_currentDebounceValue;
-    }
-  }
+  // if (_sensorType == "sonar") {
+  //   if (this->_currentDebounceValue - this->_previousDebounceValue >= _debounceThreshold) {
+  //     const int16_t rawValue = this->getRawValue(accelgyro, lox);
+  //     const uint8_t sensorMappedValue = this->getMappedMidiValue(rawValue);
+  //     if (this->currentValue != sensorMappedValue) {
+  //       this->currentValue = this->previousValue;
+  //     }
+  //     this->_previousDebounceValue = this->_currentDebounceValue;
+  //   }
+  // }
   if (_sensorType == "force") {
     this->previousToggleStatus = this->toggleStatus;
     if (this->_currentDebounceValue - this->_previousDebounceValue >= _debounceThreshold) {
@@ -276,6 +290,7 @@ void Sensor::debounce(MPU6050 *accelgyro, Adafruit_VL53L0X *lox) {
     }
   }
 }
+
 
 void Sensor::sendSerialMidiMessage(HardwareSerial *Serial2) {
   if (this->_midiMessage == "controlChange") {
@@ -294,6 +309,9 @@ void Sensor::sendSerialMidiMessage(HardwareSerial *Serial2) {
   }
 }
 
+/**
+  * For ESP32 device.
+  **/
 // void Sensor::sendBleMidiMessage(BLEMidiServerClass *serverInstance) {
 //   if (this->_midiMessage == "controlChange") {
 //     if (this->currentValue != this->previousValue) {

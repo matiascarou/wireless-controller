@@ -6,7 +6,7 @@
 #include "Wire.h"
 #include <vector>
 #include <map>
-// #include "Utils.h"
+#include "Utils.h"
 // #include <BLEMidi.h>
 
 class Sensor {
@@ -59,6 +59,7 @@ public:
   void setMeasuresCounter(uint8_t value);
   void setDataBuffer(int16_t value);
   void setThreshold(uint8_t value);
+  void setActiveParents(uint8_t amountOfActiveParents);
   void setMidiMessage(std::string value);
   // void sendBleMidiMessage(BLEMidiServerClass *serverInstance);
   void sendSerialMidiMessage(HardwareSerial *Serial2);
@@ -77,6 +78,9 @@ public:
     }
   }
 
+  /**
+  * For ESP32 device.
+  **/
   static std::vector<Sensor *> initializeEsp32Sensors() {
     const static std::vector<Sensor *> SENSORS = {
       new Sensor("potentiometer", 102, 15),
@@ -90,18 +94,19 @@ public:
   }
 
   /**
-  * For STM32 support.
+  * For STM32 device.
   **/
   static std::vector<Sensor *> initializeStm32Sensors() {
     const static std::vector<Sensor *> SENSORS = {
       new Sensor("potentiometer", 102, PA0),
-      // new Sensor("potentiometer", 103, PA1),
-      // new Sensor("potentiometer", 104, PA2),
-      new Sensor("force", 105, PA4),
-      // new Sensor("ax", 106, 0, PB12),
-      new Sensor("ax", 106, 0, 0),
-      // new Sensor("ay", 107, 0, PB14),
-      // new Sensor("sonar", 110, PB15, PB5)
+      new Sensor("potentiometer", 103, PA1),
+      new Sensor("potentiometer", 104, PA4),
+      new Sensor("force", 105, PB1, PB8),
+      new Sensor("ax", 106, 0, PB12),
+      new Sensor("ay", 107, 0, PB14),
+      new Sensor("sonar", 108, PB5, PB15)
+      // new Sensor("ax", 106, 0, 0),
+      // new Sensor("ay", 107, 0, 0),
     };
     return SENSORS;
   }
@@ -163,12 +168,29 @@ public:
   }
 
   static void writeSerialMidiMessage(uint8_t statusCode, uint8_t controllerNumber, uint8_t sensorValue, HardwareSerial *Serial2) {
-    // Utils::printMessage(statusCode, controllerNumber, sensorValue);
-    static const byte rightGuillemet[] = { 0xC2, 0xBB };  //11000010, 10111011
+    // Utils::printMidiMessage(statusCode, controllerNumber, sensorValue);
+    static const byte rightGuillemet[] = { 0xC2, 0xBB };  //UTF-8 character for separating MIDI messages: 11000010, 10111011
     Serial2->write(char(statusCode));
     Serial2->write(char(controllerNumber));
     Serial2->write(char(sensorValue));
     Serial2->write(rightGuillemet, sizeof(rightGuillemet));
+  }
+
+  /**
+  * TODO: make this dynamic.
+  **/
+  static bool is_active(Sensor *SENSOR) {
+    if (SENSOR->_sensorType == "ax" || SENSOR->_sensorType == "ay") {
+      const bool isSensorActive = SENSOR->isSwitchActive();
+      return isSensorActive;
+    }
+    return false;
+  }
+
+  static uint8_t getActiveParents(std::vector<Sensor *> SENSORS) {
+    std::vector<Sensor *> active_sensors;
+    const uint8_t activeParents = std::count_if(SENSORS.begin(), SENSORS.end(), is_active);
+    return activeParents;
   }
 
 
