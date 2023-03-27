@@ -8,7 +8,7 @@
 
 static const int IMU_FLOOR = 60;
 static const int IMU_CEIL = 15700;
-static const int IMU_FILTER_THRESHOLD = 80;
+static const int IMU_FILTER_THRESHOLD = 90;
 
 int16_t Sensor::getFilterThreshold(std::string &type) {
   static std::map<std::string, int> filterThresholdValues = {
@@ -158,25 +158,19 @@ std::string Sensor::getSensorType() {
 }
 
 bool Sensor::isSwitchActive() {
-  // const bool isSwitchActive = !!this->_intPin ? !!digitalRead(this->_intPin) : true;
-  // this->currentSwitchState = isSwitchActive;
-  // if (this->currentSwitchState != this->previousSwitchState) {
-  //   this->isDebounced = false;
-  // }
-  // return isSwitchActive;
-  return !!this->_intPin ? !!digitalRead(this->_intPin) : true;
+  const bool isSwitchActive = !!this->_intPin ? !!digitalRead(this->_intPin) : true;
+  this->currentSwitchState = isSwitchActive;
+  if (this->currentSwitchState != this->previousSwitchState) {
+    this->isDebounced = false;
+  }
+  return isSwitchActive;
 }
 
 bool Sensor::isSwitchDebounced() {
   this->currentDebounceTimer = millis();
   if (_sensorType == "ax" || _sensorType == "ay") {
     if (!this->isDebounced) {
-      Serial.print("current debounce timer: ");
-      Serial.print(this->previousDebounceTimer);
-      Serial.print("\t");
-      Serial.print("actual time: ");
-      Serial.println(this->currentDebounceTimer);
-      if (this->currentDebounceTimer - this->previousDebounceTimer >= 2000) {
+      if (this->currentDebounceTimer - this->previousDebounceTimer >= 500) {
         this->previousSwitchState = this->currentSwitchState;
         this->isDebounced = true;
         this->previousDebounceTimer = this->currentDebounceTimer;
@@ -212,8 +206,6 @@ int16_t Sensor::getRawValue(MPU6050 *accelgyro, Adafruit_VL53L0X *lox) {
 
   if (_sensorType == "ax") {
     const int16_t rawValue = accelgyro->getAccelerationX();
-    // Serial.print("Raw value: ");
-    // Serial.println(rawValue);
     return constrain(rawValue, 0, _ceil);
   }
 

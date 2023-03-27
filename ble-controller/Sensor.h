@@ -184,19 +184,32 @@ public:
   /**
   * TODO: make this dynamic.
   **/
-  static bool is_active(Sensor *SENSOR, std::initializer_list<std::string> listOfCandidates) {
+  static bool is_active(Sensor *SENSOR, std::vector<std::string> listOfCandidates) {
     if (std::find(listOfCandidates.begin(), listOfCandidates.end(), SENSOR->_sensorType) != listOfCandidates.end()) {
       return SENSOR->isSwitchActive();
     }
     return false;
   }
 
-  static uint8_t getActiveSiblings(std::vector<Sensor *> SENSORS, std::initializer_list<std::string> candidates) {
-    std::vector<Sensor *> active_sensors;
+  static bool is_debounced(Sensor *SENSOR, std::vector<std::string> listOfCandidates) {
+    if (std::find(listOfCandidates.begin(), listOfCandidates.end(), SENSOR->_sensorType) != listOfCandidates.end()) {
+      return SENSOR->isSwitchDebounced();
+    }
+    return false;
+  }
+
+  static uint8_t getActiveSiblings(std::vector<Sensor *> SENSORS, std::vector<std::string> candidates) {
     const uint8_t activeSiblings = std::count_if(SENSORS.begin(), SENSORS.end(), [&](Sensor *s) {
       return is_active(s, candidates);
     });
     return activeSiblings;
+  }
+
+  static uint8_t areAllSiblingsDebounced(std::vector<Sensor *> SENSORS, std::vector<std::string> candidates) {
+    const uint8_t amountOfDebouncedSensors = std::count_if(SENSORS.begin(), SENSORS.end(), [&](Sensor *s) {
+      return is_debounced(s, candidates);
+    });
+    return candidates.size() == amountOfDebouncedSensors;
   }
 
 

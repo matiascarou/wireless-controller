@@ -19,11 +19,11 @@ HardwareSerial Serial2(PA3, PA2);  //RX, TX
 
 void setup() {
   delay(500);
-  Serial.begin(115200);
+  Serial.begin(230400);
   Serial2.begin(230400);
   Serial.println("Starting I2C bus...");
   Wire.begin();
-  Wire.setClock(400000L);
+  // Wire.setClock(400000L);
 
   analogReadResolution(10);
 
@@ -56,14 +56,19 @@ bool lastButtonState = false;
 bool toggleStatus = false;
 bool pitchBendLedState = false;
 
+const std::vector<std::string> SIBLINGS = { "ax", "ay" };
 
 void loop() {
   currentTime = millis();
   // const bool isBendActive = Sensor::isPitchButtonActive(currentButtonState, lastButtonState, toggleStatus, PITCH_BEND_BUTTON);
   // Sensor* infraredSensor = Sensor::getSensorBySensorType(SENSORS, "infrared");
   // Sensor::runPitchBendLogic(infraredSensor, isBendActive, pitchBendLedState, PITCH_BEND_LED);
-  const uint8_t activeSiblings = Sensor::getActiveSiblings(SENSORS, { "ax", "ay" });
+  const uint8_t activeSiblings = Sensor::getActiveSiblings(SENSORS, SIBLINGS);
+  const uint8_t areAllSiblingsDebounced = Sensor::areAllSiblingsDebounced(SENSORS, SIBLINGS);
   for (Sensor* SENSOR : SENSORS) {
+    if (std::find(SIBLINGS.begin(), SIBLINGS.end(), SENSOR->_sensorType) != SIBLINGS.end() && !areAllSiblingsDebounced) {
+      continue;
+    }
     if (SENSOR->isSwitchActive()) {
       int16_t rawValue = SENSOR->getRawValue(&accelgyro, &lox);
       SENSOR->setPreviousRawValue(rawValue);
@@ -85,5 +90,5 @@ void loop() {
     }
   }
   delayMicroseconds(500);
-  // Utils::printRuntimeOverrallValue(counter, timeBuffer, previousTime, currentTime);
+  Utils::printRuntimeOverrallValue(counter, timeBuffer, previousTime, currentTime);
 }
