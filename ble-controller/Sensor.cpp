@@ -10,6 +10,15 @@ static const int IMU_FLOOR = 60;
 static const int IMU_CEIL = 15700;
 static const int IMU_FILTER_THRESHOLD = 80;
 
+static std::map<uint8_t, uint8_t> imuFilterResolution = {
+  { 1, 60 },
+  { 2, 40 },
+  { 3, 25 },
+  { 4, 20 },
+  { 5, 15 },
+  { 6, 10 },
+};
+
 int16_t Sensor::getFilterThreshold(std::string &type) {
   static std::map<std::string, int> filterThresholdValues = {
     { "potentiometer", 30 },
@@ -61,7 +70,7 @@ int16_t Sensor::getCeil(std::string &type) {
 
 uint16_t Sensor::getDebounceThreshold(std::string &type) {
   static std::map<std::string, int> debounceThresholdValues = {
-    { "force", 15 },
+    { "force", 10 },
     { "sonar", 100 },
   };
   return debounceThresholdValues[type];
@@ -115,9 +124,8 @@ void Sensor::setThreshold(uint8_t value) {
 
 void Sensor::setThresholdBasedOnActiveSiblings(uint8_t amountOfActiveSiblings) {
   const int16_t initialSensorThreshold = Sensor::getFilterThreshold(this->_sensorType);
-  if (this->_sensorType == "ax" || this->_sensorType == "ay") {
-    const int16_t thresholdToSet = initialSensorThreshold / amountOfActiveSiblings;
-    this->_threshold = round(thresholdToSet);
+  if (this->_sensorType == "ax" || this->_sensorType == "ay" || this->_sensorType == "az") {
+    this->_threshold = imuFilterResolution[amountOfActiveSiblings];
   }
 }
 

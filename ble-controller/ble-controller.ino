@@ -55,7 +55,7 @@ bool lastButtonState = false;
 bool toggleStatus = false;
 bool pitchBendLedState = false;
 
-const std::vector<std::string> SIBLINGS = { "ax", "ay" };
+const static std::vector<std::string> SIBLINGS = { "ax", "ay" };
 
 void loop() {
   currentTime = millis();
