@@ -95,13 +95,15 @@ Sensor::Sensor(const std::string &sensorType, const uint8_t &controllerNumber, c
   // _ceil = Sensor::getInitialValue(_sensorType, "ceil");
   // _threshold = Sensor::getInitialValue(_sensorType, "threshold");
   // _debounceThreshold = Sensor::getInitialValue(_sensorType, "debounce");
+  currentDebounceTimer = 0;
+  previousDebounceTimer = 0;
+  currentSwitchState = false;
+  previousSwitchState = false;
+  isDebounced = false;
+  counter = 0;
   msb = 0;
   lsb = 0;
 }
-
-bool Sensor::isSwitchActive() {
-  return !!this->_intPin ? !!digitalRead(this->_intPin) : true;
-};
 
 bool Sensor::isAboveThreshold() {
   return this->measuresCounter % this->_threshold == 0;
@@ -115,10 +117,10 @@ void Sensor::setThreshold(uint8_t value) {
   this->_threshold = value;
 }
 
-void Sensor::setActiveParents(uint8_t amountOfActiveParents) {
+void Sensor::setThresholdBasedOnActiveSiblings(uint8_t amountOfActiveSiblings) {
   const int16_t initialSensorThreshold = Sensor::getFilterThreshold(this->_sensorType);
   if (this->_sensorType == "ax" || this->_sensorType == "ay") {
-    const int16_t thresholdToSet = initialSensorThreshold / amountOfActiveParents;
+    const int16_t thresholdToSet = initialSensorThreshold / amountOfActiveSiblings;
     this->_threshold = round(thresholdToSet);
   }
 }
@@ -155,7 +157,41 @@ std::string Sensor::getSensorType() {
   return this->_sensorType;
 }
 
+bool Sensor::isSwitchActive() {
+  // const bool isSwitchActive = !!this->_intPin ? !!digitalRead(this->_intPin) : true;
+  // this->currentSwitchState = isSwitchActive;
+  // if (this->currentSwitchState != this->previousSwitchState) {
+  //   this->isDebounced = false;
+  // }
+  // return isSwitchActive;
+  return !!this->_intPin ? !!digitalRead(this->_intPin) : true;
+}
+
+bool Sensor::isSwitchDebounced() {
+  this->currentDebounceTimer = millis();
+  if (_sensorType == "ax" || _sensorType == "ay") {
+    if (!this->isDebounced) {
+      Serial.print("current debounce timer: ");
+      Serial.print(this->previousDebounceTimer);
+      Serial.print("\t");
+      Serial.print("actual time: ");
+      Serial.println(this->currentDebounceTimer);
+      if (this->currentDebounceTimer - this->previousDebounceTimer >= 2000) {
+        this->previousSwitchState = this->currentSwitchState;
+        this->isDebounced = true;
+        this->previousDebounceTimer = this->currentDebounceTimer;
+        return true;
+      }
+      return false;
+    }
+    this->previousDebounceTimer = this->currentDebounceTimer;
+    return true;
+  }
+  return true;
+}
+
 int16_t Sensor::getRawValue(MPU6050 *accelgyro, Adafruit_VL53L0X *lox) {
+
   if (_sensorType == "potentiometer" || _sensorType == "force") {
     return analogRead(_pin);
   }
@@ -176,6 +212,8 @@ int16_t Sensor::getRawValue(MPU6050 *accelgyro, Adafruit_VL53L0X *lox) {
 
   if (_sensorType == "ax") {
     const int16_t rawValue = accelgyro->getAccelerationX();
+    // Serial.print("Raw value: ");
+    // Serial.println(rawValue);
     return constrain(rawValue, 0, _ceil);
   }
 

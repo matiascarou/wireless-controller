@@ -2,7 +2,7 @@
 #define UTILS_H
 
 namespace Utils {
-// static void setAndGetEsp32CpuFrequency(const uint32_t& Freq) {
+// static uint32_t setAndGetEsp32CpuFrequency(const uint32_t& Freq) {
 //   setCpuFrequencyMhz(Freq);
 //   const uint32_t esp32ProcessorSpeed = getCpuFrequencyMhz();
 //   delay(500);

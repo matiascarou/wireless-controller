@@ -23,6 +23,11 @@ private:
   uint16_t _debounceThreshold;
   unsigned long _currentDebounceValue;
   unsigned long _previousDebounceValue;
+  unsigned long currentDebounceTimer;
+  unsigned long previousDebounceTimer;
+  bool previousSwitchState;
+  bool currentSwitchState;
+  bool isDebounced;
   int16_t _threshold;
   int16_t _floor;
   int16_t _ceil;
@@ -33,6 +38,7 @@ private:
   uint16_t getDebounceThreshold(std::string &type);
   uint8_t msb = 0;
   uint8_t lsb = 0;
+  uint8_t counter = 0;
 public:
   Sensor(const std::string &sensorType, const uint8_t &controllerNumber, const uint8_t &pin = 0, const uint8_t &intPin = 0);
   std::string _sensorType;
@@ -46,6 +52,7 @@ public:
   int16_t filteredValue;
   bool isSwitchActive();
   bool isAboveThreshold();
+  bool isSwitchDebounced();
   int getMappedMidiValue(int16_t actualValue, int floor = 0, int ceil = 0);
   int16_t getRawValue(MPU6050 *accelgyro, Adafruit_VL53L0X *lox);
   int16_t runNonBlockingAverageFilter();
@@ -59,7 +66,7 @@ public:
   void setMeasuresCounter(uint8_t value);
   void setDataBuffer(int16_t value);
   void setThreshold(uint8_t value);
-  void setActiveParents(uint8_t amountOfActiveParents);
+  void setThresholdBasedOnActiveSiblings(uint8_t amountOfActiveSiblings);
   void setMidiMessage(std::string value);
   // void sendBleMidiMessage(BLEMidiServerClass *serverInstance);
   void sendSerialMidiMessage(HardwareSerial *Serial2);
@@ -102,11 +109,9 @@ public:
       new Sensor("potentiometer", 103, PA1),
       new Sensor("potentiometer", 104, PA4),
       new Sensor("force", 105, PB1, PB8),
-      new Sensor("ax", 106, 0, PB12),
-      new Sensor("ay", 107, 0, PB14),
-      new Sensor("sonar", 108, PB5, PB15)
-      // new Sensor("ax", 106, 0, 0),
-      // new Sensor("ay", 107, 0, 0),
+      new Sensor("sonar", 106, PB5, PB15),
+      new Sensor("ax", 107, 0, PB12),
+      new Sensor("ay", 108, 0, PB14),
     };
     return SENSORS;
   }
@@ -179,18 +184,19 @@ public:
   /**
   * TODO: make this dynamic.
   **/
-  static bool is_active(Sensor *SENSOR) {
-    if (SENSOR->_sensorType == "ax" || SENSOR->_sensorType == "ay") {
-      const bool isSensorActive = SENSOR->isSwitchActive();
-      return isSensorActive;
+  static bool is_active(Sensor *SENSOR, std::initializer_list<std::string> listOfCandidates) {
+    if (std::find(listOfCandidates.begin(), listOfCandidates.end(), SENSOR->_sensorType) != listOfCandidates.end()) {
+      return SENSOR->isSwitchActive();
     }
     return false;
   }
 
-  static uint8_t getActiveParents(std::vector<Sensor *> SENSORS) {
+  static uint8_t getActiveSiblings(std::vector<Sensor *> SENSORS, std::initializer_list<std::string> candidates) {
     std::vector<Sensor *> active_sensors;
-    const uint8_t activeParents = std::count_if(SENSORS.begin(), SENSORS.end(), is_active);
-    return activeParents;
+    const uint8_t activeSiblings = std::count_if(SENSORS.begin(), SENSORS.end(), [&](Sensor *s) {
+      return is_active(s, candidates);
+    });
+    return activeSiblings;
   }
 
 
