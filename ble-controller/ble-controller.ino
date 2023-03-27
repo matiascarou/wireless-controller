@@ -23,7 +23,6 @@ void setup() {
   Serial2.begin(230400);
   Serial.println("Starting I2C bus...");
   Wire.begin();
-  // Wire.setClock(400000L);
 
   analogReadResolution(10);
 
@@ -90,5 +89,5 @@ void loop() {
     }
   }
   delayMicroseconds(500);
-  Utils::printRuntimeOverrallValue(counter, timeBuffer, previousTime, currentTime);
+  // Utils::printRuntimeOverrallValue(counter, timeBuffer, previousTime, currentTime);
 }

@@ -181,9 +181,6 @@ public:
     Serial2->write(rightGuillemet, sizeof(rightGuillemet));
   }
 
-  /**
-  * TODO: make this dynamic.
-  **/
   static bool is_active(Sensor *SENSOR, std::vector<std::string> listOfCandidates) {
     if (std::find(listOfCandidates.begin(), listOfCandidates.end(), SENSOR->_sensorType) != listOfCandidates.end()) {
       return SENSOR->isSwitchActive();

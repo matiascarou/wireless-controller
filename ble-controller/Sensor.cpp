@@ -8,7 +8,7 @@
 
 static const int IMU_FLOOR = 60;
 static const int IMU_CEIL = 15700;
-static const int IMU_FILTER_THRESHOLD = 90;
+static const int IMU_FILTER_THRESHOLD = 80;
 
 int16_t Sensor::getFilterThreshold(std::string &type) {
   static std::map<std::string, int> filterThresholdValues = {
@@ -91,10 +91,6 @@ Sensor::Sensor(const std::string &sensorType, const uint8_t &controllerNumber, c
   _ceil = Sensor::getCeil(_sensorType);
   _threshold = Sensor::getFilterThreshold(_sensorType);
   _debounceThreshold = Sensor::getDebounceThreshold(_sensorType);
-  // _floor = Sensor::getInitialValue(_sensorType, "floor");
-  // _ceil = Sensor::getInitialValue(_sensorType, "ceil");
-  // _threshold = Sensor::getInitialValue(_sensorType, "threshold");
-  // _debounceThreshold = Sensor::getInitialValue(_sensorType, "debounce");
   currentDebounceTimer = 0;
   previousDebounceTimer = 0;
   currentSwitchState = false;
@@ -338,6 +334,11 @@ void Sensor::sendSerialMidiMessage(HardwareSerial *Serial2) {
     }
   }
 }
+
+// _floor = Sensor::getInitialValue(_sensorType, "floor");
+// _ceil = Sensor::getInitialValue(_sensorType, "ceil");
+// _threshold = Sensor::getInitialValue(_sensorType, "threshold");
+// _debounceThreshold = Sensor::getInitialValue(_sensorType, "debounce");
 
 /**
   * For ESP32 device.
