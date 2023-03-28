@@ -4,7 +4,7 @@
 #include "Wire.h"
 #include "Sensor.h"
 #include "Adafruit_VL53L0X.h"
-// #include "Utils.h"
+#include "Utils.h"
 // #include <BLEMidi.h>
 
 // const uint8_t ERROR_LED = 2;
@@ -88,6 +88,6 @@ void loop() {
       }
     }
   }
-  delayMicroseconds(500);
-  // Utils::printRuntimeOverrallValue(counter, timeBuffer, previousTime, currentTime);
+  delay(1);
+  // Utils::printRuntimeOverrallValue(counter, timeBuffer, previousTime, currentTime, 20);
 }

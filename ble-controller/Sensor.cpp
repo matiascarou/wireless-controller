@@ -6,17 +6,17 @@
 #include <map>
 // #include <BLEMidi.h>
 
-static const int IMU_FLOOR = 60;
+static const int IMU_FLOOR = 600;
 static const int IMU_CEIL = 15700;
-static const int IMU_FILTER_THRESHOLD = 80;
+static const int IMU_BASE_FILTER_THRESHOLD = 40;
 
 static std::map<uint8_t, uint8_t> imuFilterResolution = {
-  { 1, 60 },
-  { 2, 40 },
-  { 3, 25 },
-  { 4, 20 },
-  { 5, 15 },
-  { 6, 10 },
+  { 1, IMU_BASE_FILTER_THRESHOLD },
+  { 2, 30 },
+  { 3, 20 },
+  { 4, 10 },
+  { 5, 5 },
+  { 6, 1 },
 };
 
 int16_t Sensor::getFilterThreshold(std::string &type) {
@@ -24,12 +24,12 @@ int16_t Sensor::getFilterThreshold(std::string &type) {
     { "potentiometer", 30 },
     { "force", 1 },
     { "sonar", 2 },
-    { "ax", IMU_FILTER_THRESHOLD },
-    { "ay", IMU_FILTER_THRESHOLD },
-    { "az", IMU_FILTER_THRESHOLD },
-    { "gx", IMU_FILTER_THRESHOLD },
-    { "gy", IMU_FILTER_THRESHOLD },
-    { "gz", IMU_FILTER_THRESHOLD },
+    { "ax", IMU_BASE_FILTER_THRESHOLD },
+    { "ay", IMU_BASE_FILTER_THRESHOLD },
+    { "az", IMU_BASE_FILTER_THRESHOLD },
+    { "gx", IMU_BASE_FILTER_THRESHOLD },
+    { "gy", IMU_BASE_FILTER_THRESHOLD },
+    { "gz", IMU_BASE_FILTER_THRESHOLD },
     { "infrared", 2 },
   };
   return filterThresholdValues[type];
@@ -40,7 +40,7 @@ int16_t Sensor::getFloor(std::string &type) {
   static std::map<std::string, int> floorValues = {
     { "potentiometer", 20 },
     { "force", 200 },
-    { "sonar", 8 },
+    { "sonar", 10 },
     { "ax", IMU_FLOOR },
     { "ay", IMU_FLOOR },
     { "az", IMU_FLOOR },
@@ -56,7 +56,7 @@ int16_t Sensor::getCeil(std::string &type) {
   static std::map<std::string, int> ceilValues = {
     { "potentiometer", 1000 },
     { "force", 1000 },
-    { "sonar", 22 },
+    { "sonar", 30 },
     { "ax", IMU_CEIL },
     { "ay", IMU_CEIL },
     { "az", IMU_CEIL },
@@ -123,8 +123,7 @@ void Sensor::setThreshold(uint8_t value) {
 }
 
 void Sensor::setThresholdBasedOnActiveSiblings(uint8_t amountOfActiveSiblings) {
-  const int16_t initialSensorThreshold = Sensor::getFilterThreshold(this->_sensorType);
-  if (this->_sensorType == "ax" || this->_sensorType == "ay" || this->_sensorType == "az") {
+  if (this->_sensorType == "ax" || this->_sensorType == "ay") {
     this->_threshold = imuFilterResolution[amountOfActiveSiblings];
   }
 }
@@ -410,19 +409,19 @@ void Sensor::sendSerialMidiMessage(HardwareSerial *Serial2) {
 
 // static const int IMU_FLOOR = 60;
 // static const int IMU_CEIL = 15700;
-// static const int IMU_FILTER_THRESHOLD = 80;
+// static const int IMU_BASE_FILTER_THRESHOLD = 80;
 // static const int IMU_DEBOUNCE_THRESHOLD = 0;
 
 // static std::map<std::string, InitialValue> values = {
 //   { "potentiometer", { 20, 1023, 30, 0 } },
 //   { "force", { 20, 1023, 20, 15 } },
 //   { "sonar", { 6, 30, 40, 100 } },
-//   { "ax", { IMU_FLOOR, IMU_CEIL, IMU_FILTER_THRESHOLD, IMU_DEBOUNCE_THRESHOLD } },
-//   { "ay", { IMU_FLOOR, IMU_CEIL, IMU_FILTER_THRESHOLD, IMU_DEBOUNCE_THRESHOLD } },
-//   { "az", { IMU_FLOOR, IMU_CEIL, IMU_FILTER_THRESHOLD, IMU_DEBOUNCE_THRESHOLD } },
-//   { "gx", { IMU_FLOOR, IMU_CEIL, IMU_FILTER_THRESHOLD, IMU_DEBOUNCE_THRESHOLD } },
-//   { "gy", { IMU_FLOOR, IMU_CEIL, IMU_FILTER_THRESHOLD, IMU_DEBOUNCE_THRESHOLD } },
-//   { "gz", { IMU_FLOOR, IMU_CEIL, IMU_FILTER_THRESHOLD, IMU_DEBOUNCE_THRESHOLD } },
+//   { "ax", { IMU_FLOOR, IMU_CEIL, IMU_BASE_FILTER_THRESHOLD, IMU_DEBOUNCE_THRESHOLD } },
+//   { "ay", { IMU_FLOOR, IMU_CEIL, IMU_BASE_FILTER_THRESHOLD, IMU_DEBOUNCE_THRESHOLD } },
+//   { "az", { IMU_FLOOR, IMU_CEIL, IMU_BASE_FILTER_THRESHOLD, IMU_DEBOUNCE_THRESHOLD } },
+//   { "gx", { IMU_FLOOR, IMU_CEIL, IMU_BASE_FILTER_THRESHOLD, IMU_DEBOUNCE_THRESHOLD } },
+//   { "gy", { IMU_FLOOR, IMU_CEIL, IMU_BASE_FILTER_THRESHOLD, IMU_DEBOUNCE_THRESHOLD } },
+//   { "gz", { IMU_FLOOR, IMU_CEIL, IMU_BASE_FILTER_THRESHOLD, IMU_DEBOUNCE_THRESHOLD } },
 // };
 
 // int16_t Sensor::getInitialValue(std::string &sensorType, std::string valueType) {

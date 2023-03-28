@@ -8,8 +8,7 @@ namespace Utils {
 //   delay(500);
 //   return esp32ProcessorSpeed;
 // }
-static void printRuntimeOverrallValue(int& counter, int& timeBuffer, unsigned long& previousTime, unsigned long& currentTime) {
-  static const int CYCLES_AMOUNT = 20;
+static void printRuntimeOverrallValue(int& counter, int& timeBuffer, unsigned long& previousTime, unsigned long& currentTime, uint8_t CYCLES_AMOUNT = 20) {
   if (counter % CYCLES_AMOUNT == 0 && counter != 0) {
     Serial.print("Average running time of ");
     Serial.print(CYCLES_AMOUNT);
