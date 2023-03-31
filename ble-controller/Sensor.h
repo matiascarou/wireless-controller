@@ -172,15 +172,6 @@ public:
     delay(100);
   }
 
-  static void writeSerialMidiMessage(uint8_t statusCode, uint8_t controllerNumber, uint8_t sensorValue, HardwareSerial *Serial2) {
-    // Utils::printMidiMessage(statusCode, controllerNumber, sensorValue);
-    static const byte rightGuillemet[] = { 0xC2, 0xBB };  //UTF-8 character for separating MIDI messages: 11000010, 10111011
-    Serial2->write(char(statusCode));
-    Serial2->write(char(controllerNumber));
-    Serial2->write(char(sensorValue));
-    Serial2->write(rightGuillemet, sizeof(rightGuillemet));
-  }
-
   static bool is_active(Sensor *SENSOR, std::vector<std::string> listOfCandidates) {
     if (std::find(listOfCandidates.begin(), listOfCandidates.end(), SENSOR->_sensorType) != listOfCandidates.end()) {
       return SENSOR->isSwitchActive();
@@ -209,21 +200,24 @@ public:
     return candidates.size() == amountOfDebouncedSensors;
   }
 
+  static void writeSerialMidiMessage(uint8_t statusCode, uint8_t controllerNumber, uint8_t sensorValue, HardwareSerial *Serial2) {
+    // Utils::printMidiMessage(statusCode, controllerNumber, sensorValue);
+    static const byte rightGuillemet[] = { 0xC2, 0xBB };  //UTF-8 character for separating MIDI messages: 11000010, 10111011
+    Serial2->write(char(statusCode));
+    Serial2->write(char(controllerNumber));
+    Serial2->write(char(sensorValue));
+    Serial2->write(rightGuillemet, sizeof(rightGuillemet));
+  }
 
+  /**
+  * TODO: Check if approach below is noticeable faster
+  **/
   // static void writeSerialMidiMessage(uint8_t statusCode, uint8_t controllerNumber, uint8_t sensorValue, HardwareSerial *Serial2) {
   //   uint16_t rightGuillemet = 0xBB00 | 0xC2;  // combine the two bytes into a single uint16_t value
   //   Serial2->write(&statusCode, 1);
   //   Serial2->write(&controllerNumber, 1);
   //   Serial2->write(&sensorValue, 1);
   //   Serial2->write(reinterpret_cast<uint8_t *>(&rightGuillemet), 2);  // reinterpret the uint16_t value as a byte array and send 2 bytes
-  // }
-
-  // static void writeSerialMidiMessage(uint8_t statusCode, uint8_t controllerNumber, uint8_t sensorValue, HardwareSerial *Serial2) {
-  //   char rightGuillemet[] = u8"\u00BB";
-  //   Serial2->write(char(statusCode));
-  //   Serial2->write(char(controllerNumber));
-  //   Serial2->write(char(sensorValue));
-  //   Serial2->write(rightGuillemet);  // reinterpret the uint16_t value as a byte array and send 2 bytes
   // }
 };
 

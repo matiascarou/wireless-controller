@@ -40,8 +40,6 @@ void setup() {
 
   Sensor::testAccelgiroConnection(accelgyro);
 
-  // BLEMidiServer.begin("The performer");
-
   Serial.println("System ready <(':'<)");
 }
 
@@ -59,9 +57,6 @@ const static std::vector<std::string> SIBLINGS = { "ax", "ay" };
 
 void loop() {
   currentTime = millis();
-  // const bool isBendActive = Sensor::isPitchButtonActive(currentButtonState, lastButtonState, toggleStatus, PITCH_BEND_BUTTON);
-  // Sensor* infraredSensor = Sensor::getSensorBySensorType(SENSORS, "infrared");
-  // Sensor::runPitchBendLogic(infraredSensor, isBendActive, pitchBendLedState, PITCH_BEND_LED);
   const uint8_t activeSiblings = Sensor::getActiveSiblings(SENSORS, SIBLINGS);
   const uint8_t areAllSiblingsDebounced = Sensor::areAllSiblingsDebounced(SENSORS, SIBLINGS);
   for (Sensor* SENSOR : SENSORS) {

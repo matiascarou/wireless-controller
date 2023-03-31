@@ -8,20 +8,20 @@
 
 static const int IMU_FLOOR = 600;
 static const int IMU_CEIL = 15700;
-static const int IMU_BASE_FILTER_THRESHOLD = 40;
+static const int IMU_BASE_FILTER_THRESHOLD = 35;
 
 static std::map<uint8_t, uint8_t> imuFilterResolution = {
   { 1, IMU_BASE_FILTER_THRESHOLD },
   { 2, 30 },
-  { 3, 20 },
-  { 4, 10 },
-  { 5, 5 },
-  { 6, 1 },
+  { 3, 25 },
+  { 4, 20 },
+  { 5, 15 },
+  { 6, 5 },
 };
 
 int16_t Sensor::getFilterThreshold(std::string &type) {
   static std::map<std::string, int> filterThresholdValues = {
-    { "potentiometer", 30 },
+    { "potentiometer", 20 },
     { "force", 1 },
     { "sonar", 2 },
     { "ax", IMU_BASE_FILTER_THRESHOLD },
@@ -70,7 +70,7 @@ int16_t Sensor::getCeil(std::string &type) {
 
 uint16_t Sensor::getDebounceThreshold(std::string &type) {
   static std::map<std::string, int> debounceThresholdValues = {
-    { "force", 10 },
+    { "force", 35 },
     { "sonar", 100 },
   };
   return debounceThresholdValues[type];
@@ -303,16 +303,6 @@ int Sensor::getMappedMidiValue(int16_t actualValue, int floor, int ceil) {
 }
 
 void Sensor::debounce(MPU6050 *accelgyro, Adafruit_VL53L0X *lox) {
-  // if (_sensorType == "sonar") {
-  //   if (this->_currentDebounceValue - this->_previousDebounceValue >= _debounceThreshold) {
-  //     const int16_t rawValue = this->getRawValue(accelgyro, lox);
-  //     const uint8_t sensorMappedValue = this->getMappedMidiValue(rawValue);
-  //     if (this->currentValue != sensorMappedValue) {
-  //       this->currentValue = this->previousValue;
-  //     }
-  //     this->_previousDebounceValue = this->_currentDebounceValue;
-  //   }
-  // }
   if (_sensorType == "force") {
     this->previousToggleStatus = this->toggleStatus;
     if (this->_currentDebounceValue - this->_previousDebounceValue >= _debounceThreshold) {
@@ -342,11 +332,6 @@ void Sensor::sendSerialMidiMessage(HardwareSerial *Serial2) {
   }
 }
 
-// _floor = Sensor::getInitialValue(_sensorType, "floor");
-// _ceil = Sensor::getInitialValue(_sensorType, "ceil");
-// _threshold = Sensor::getInitialValue(_sensorType, "threshold");
-// _debounceThreshold = Sensor::getInitialValue(_sensorType, "debounce");
-
 /**
   * For ESP32 device.
   **/
@@ -373,6 +358,17 @@ void Sensor::sendSerialMidiMessage(HardwareSerial *Serial2) {
 // }
 
 //// //// //// //// //// //// //// //// //// //// //// //// //// ////
+/**
+  * For loop function in esp32
+  **/
+// const bool isBendActive = Sensor::isPitchButtonActive(currentButtonState, lastButtonState, toggleStatus, PITCH_BEND_BUTTON);
+// Sensor* infraredSensor = Sensor::getSensorBySensorType(SENSORS, "infrared");
+// Sensor::runPitchBendLogic(infraredSensor, isBendActive, pitchBendLedState, PITCH_BEND_LED);
+
+// _floor = Sensor::getInitialValue(_sensorType, "floor");
+// _ceil = Sensor::getInitialValue(_sensorType, "ceil");
+// _threshold = Sensor::getInitialValue(_sensorType, "threshold");
+// _debounceThreshold = Sensor::getInitialValue(_sensorType, "debounce");
 
 /**
   * TODO: check ESP32 compatibility with struct (wasn't working before).
