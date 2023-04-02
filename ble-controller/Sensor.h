@@ -58,6 +58,7 @@ public:
   int16_t runNonBlockingAverageFilter();
   int16_t runBlockingAverageFilter(int measureSize, MPU6050 *accelgyro, Adafruit_VL53L0X *lox, int gap = 500);
   int16_t runExponentialFilter(MPU6050 *accelgyro, Adafruit_VL53L0X *lox);
+  bool isSibling(const std::vector<std::string> &SIBLINGS);
   std::vector< uint8_t > getValuesBetweenRanges(uint8_t gap = 1);
   void setCurrentDebounceValue(unsigned long timeValue);
   void setCurrentValue(uint8_t value);
@@ -66,12 +67,13 @@ public:
   void setMeasuresCounter(uint8_t value);
   void setDataBuffer(int16_t value);
   void setThreshold(uint8_t value);
-  void setThresholdBasedOnActiveSiblings(uint8_t amountOfActiveSiblings);
+  void setThresholdBasedOnActiveSiblings(const uint8_t &amountOfActiveSiblings);
   void setMidiMessage(std::string value);
   // void sendBleMidiMessage(BLEMidiServerClass *serverInstance);
   void sendSerialMidiMessage(HardwareSerial *Serial2);
   void setMidiChannel(uint8_t channel);
   void debounce(MPU6050 *accelgyro, Adafruit_VL53L0X *lox);
+  void run(MPU6050 *accelgyro, Adafruit_VL53L0X *lox, const uint8_t &activeSiblings);
   std::string getSensorType();
 
   static void setUpSensorPins(std::vector<Sensor *> SENSORS) {
@@ -151,7 +153,6 @@ public:
     }
   }
 
-  // static void testAccelgiroConnection(MPU6050 &accelgyro, const uint8_t &ERROR_LED) {
   static void testAccelgiroConnection(MPU6050 &accelgyro) {
     accelgyro.initialize();
     if (accelgyro.testConnection()) {
@@ -200,25 +201,26 @@ public:
     return candidates.size() == amountOfDebouncedSensors;
   }
 
-  static void writeSerialMidiMessage(uint8_t statusCode, uint8_t controllerNumber, uint8_t sensorValue, HardwareSerial *Serial2) {
-    // Utils::printMidiMessage(statusCode, controllerNumber, sensorValue);
-    static const byte rightGuillemet[] = { 0xC2, 0xBB };  //UTF-8 character for separating MIDI messages: 11000010, 10111011
-    Serial2->write(char(statusCode));
-    Serial2->write(char(controllerNumber));
-    Serial2->write(char(sensorValue));
-    Serial2->write(rightGuillemet, sizeof(rightGuillemet));
-  }
+  // static void writeSerialMidiMessage(uint8_t statusCode, uint8_t controllerNumber, uint8_t sensorValue, HardwareSerial *Serial2) {
+  //   // Utils::printMidiMessage(statusCode, controllerNumber, sensorValue);
+  //   static const byte rightGuillemet[] = { 0xC2, 0xBB };  //UTF-8 character for separating MIDI messages: 11000010, 10111011
+  //   Serial2->write(char(statusCode));
+  //   Serial2->write(char(controllerNumber));
+  //   Serial2->write(char(sensorValue));
+  //   Serial2->write(rightGuillemet, sizeof(rightGuillemet));
+  // }
 
   /**
   * TODO: Check if approach below is noticeable faster
   **/
-  // static void writeSerialMidiMessage(uint8_t statusCode, uint8_t controllerNumber, uint8_t sensorValue, HardwareSerial *Serial2) {
-  //   uint16_t rightGuillemet = 0xBB00 | 0xC2;  // combine the two bytes into a single uint16_t value
-  //   Serial2->write(&statusCode, 1);
-  //   Serial2->write(&controllerNumber, 1);
-  //   Serial2->write(&sensorValue, 1);
-  //   Serial2->write(reinterpret_cast<uint8_t *>(&rightGuillemet), 2);  // reinterpret the uint16_t value as a byte array and send 2 bytes
-  // }
+  static void writeSerialMidiMessage(uint8_t statusCode, uint8_t controllerNumber, uint8_t sensorValue, HardwareSerial *Serial2) {
+    // Utils::printMidiMessage(statusCode, controllerNumber, sensorValue);
+    uint16_t rightGuillemet = 0xBB00 | 0xC2;  // combine the two bytes into a single uint16_t value
+    Serial2->write(&statusCode, 1);
+    Serial2->write(&controllerNumber, 1);
+    Serial2->write(&sensorValue, 1);
+    Serial2->write(reinterpret_cast<uint8_t *>(&rightGuillemet), 2);  // reinterpret the uint16_t value as a byte array and send 2 bytes
+  }
 };
 
 

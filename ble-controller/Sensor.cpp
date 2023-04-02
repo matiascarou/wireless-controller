@@ -71,7 +71,6 @@ int16_t Sensor::getCeil(std::string &type) {
 uint16_t Sensor::getDebounceThreshold(std::string &type) {
   static std::map<std::string, int> debounceThresholdValues = {
     { "force", 35 },
-    { "sonar", 100 },
   };
   return debounceThresholdValues[type];
 }
@@ -122,7 +121,7 @@ void Sensor::setThreshold(uint8_t value) {
   this->_threshold = value;
 }
 
-void Sensor::setThresholdBasedOnActiveSiblings(uint8_t amountOfActiveSiblings) {
+void Sensor::setThresholdBasedOnActiveSiblings(const uint8_t &amountOfActiveSiblings) {
   if (this->_sensorType == "ax" || this->_sensorType == "ay") {
     this->_threshold = imuFilterResolution[amountOfActiveSiblings];
   }
@@ -314,6 +313,10 @@ void Sensor::debounce(MPU6050 *accelgyro, Adafruit_VL53L0X *lox) {
   }
 }
 
+bool Sensor::isSibling(const std::vector<std::string> &SIBLINGS) {
+  const std::vector<std::string>::const_iterator it = std::find(SIBLINGS.begin(), SIBLINGS.end(), this->_sensorType);
+  return it != SIBLINGS.end();
+}
 
 void Sensor::sendSerialMidiMessage(HardwareSerial *Serial2) {
   if (this->_midiMessage == "controlChange") {
@@ -357,7 +360,31 @@ void Sensor::sendSerialMidiMessage(HardwareSerial *Serial2) {
 //   }
 // }
 
+void Sensor::run(MPU6050 *accelgyro, Adafruit_VL53L0X *lox, const uint8_t &activeSiblings) {)
+  int16_t rawValue = this->getRawValue(accelgyro, lox);
+  this->setPreviousRawValue(rawValue);
+  this->setDataBuffer(rawValue);
+  this->setMeasuresCounter(1);
+  if (this->isAboveThreshold()) {
+    const unsigned long currentDebounceValue = millis();
+    this->setCurrentDebounceValue(currentDebounceValue);
+    const int16_t averageValue = this->runNonBlockingAverageFilter();
+    const uint8_t sensorMappedValue = this->getMappedMidiValue(averageValue);
+    this->setPreviousValue(this->currentValue);
+    this->setCurrentValue(sensorMappedValue);
+    this->debounce(accelgyro, lox);
+    this->sendSerialMidiMessage(&Serial2);
+    this->setMeasuresCounter(0);
+    this->setDataBuffer(0);
+    this->setThresholdBasedOnActiveSiblings(activeSiblings);
+  }
+}
+
 //// //// //// //// //// //// //// //// //// //// //// //// //// ////
+
+// const uint8_t ERROR_LED = 2;
+// const uint8_t PITCH_BEND_BUTTON = 32;
+// const uint8_t PITCH_BEND_LED = 18;
 /**
   * For loop function in esp32
   **/
