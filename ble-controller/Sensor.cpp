@@ -39,7 +39,7 @@ int16_t Sensor::getFilterThreshold(std::string &type) {
 int16_t Sensor::getFloor(std::string &type) {
   static std::map<std::string, int> floorValues = {
     { "potentiometer", 20 },
-    { "force", 200 },
+    { "force", 500 },
     { "sonar", 10 },
     { "ax", IMU_FLOOR },
     { "ay", IMU_FLOOR },
@@ -70,7 +70,7 @@ int16_t Sensor::getCeil(std::string &type) {
 
 uint16_t Sensor::getDebounceThreshold(std::string &type) {
   static std::map<std::string, int> debounceThresholdValues = {
-    { "force", 35 },
+    { "force", 30 },
   };
   return debounceThresholdValues[type];
 }
@@ -360,7 +360,7 @@ void Sensor::sendSerialMidiMessage(HardwareSerial *Serial2) {
 //   }
 // }
 
-void Sensor::run(MPU6050 *accelgyro, Adafruit_VL53L0X *lox, const uint8_t &activeSiblings) {)
+void Sensor::run(MPU6050 *accelgyro, Adafruit_VL53L0X *lox, const uint8_t &activeSiblings) {
   int16_t rawValue = this->getRawValue(accelgyro, lox);
   this->setPreviousRawValue(rawValue);
   this->setDataBuffer(rawValue);
