@@ -51,12 +51,11 @@ void loop() {
   const uint8_t activeSiblings = Sensor::getActiveSiblings(SENSORS, SIBLINGS);
   const uint8_t areAllSiblingsDebounced = Sensor::areAllSiblingsDebounced(SENSORS, SIBLINGS);
   for (Sensor* SENSOR : SENSORS) {
-    if (SENSOR->isSibling(SIBLINGS) && !areAllSiblingsDebounced) {
+    const bool isSiblingButWithPendingDebounce = SENSOR->isSibling(SIBLINGS) && !areAllSiblingsDebounced;
+    if (isSiblingButWithPendingDebounce || !SENSOR->isSwitchActive()) {
       continue;
     }
-    if (SENSOR->isSwitchActive()) {
-      SENSOR->run(&accelgyro, &lox, activeSiblings);
-    }
+    SENSOR->run(&accelgyro, &lox, activeSiblings);
   }
   delay(1);
   // Utils::printRuntimeOverrallValue(counter, timeBuffer, previousTime, currentTime, 20);

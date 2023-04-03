@@ -180,18 +180,18 @@ public:
     return false;
   }
 
-  static bool is_debounced(Sensor *SENSOR, std::vector<std::string> listOfCandidates) {
-    if (std::find(listOfCandidates.begin(), listOfCandidates.end(), SENSOR->_sensorType) != listOfCandidates.end()) {
-      return SENSOR->isSwitchDebounced();
-    }
-    return false;
-  }
-
   static uint8_t getActiveSiblings(std::vector<Sensor *> SENSORS, std::vector<std::string> candidates) {
     const uint8_t activeSiblings = std::count_if(SENSORS.begin(), SENSORS.end(), [&](Sensor *s) {
       return is_active(s, candidates);
     });
     return activeSiblings;
+  }
+
+  static bool is_debounced(Sensor *SENSOR, std::vector<std::string> listOfCandidates) {
+    if (std::find(listOfCandidates.begin(), listOfCandidates.end(), SENSOR->_sensorType) != listOfCandidates.end()) {
+      return SENSOR->isSwitchDebounced();
+    }
+    return false;
   }
 
   static uint8_t areAllSiblingsDebounced(std::vector<Sensor *> SENSORS, std::vector<std::string> candidates) {

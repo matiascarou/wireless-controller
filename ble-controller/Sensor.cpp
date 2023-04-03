@@ -6,7 +6,7 @@
 #include <map>
 // #include <BLEMidi.h>
 
-static const int IMU_FLOOR = 600;
+static const int IMU_FLOOR = 700;
 static const int IMU_CEIL = 15700;
 static const int IMU_BASE_FILTER_THRESHOLD = 35;
 
