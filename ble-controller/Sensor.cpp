@@ -23,7 +23,7 @@ int16_t Sensor::getFilterThreshold(std::string &type) {
   static std::map<std::string, int> filterThresholdValues = {
     { "potentiometer", 20 },
     { "force", 1 },
-    { "sonar", 2 },
+    { "sonar", 1 },
     { "ax", IMU_BASE_FILTER_THRESHOLD },
     { "ay", IMU_BASE_FILTER_THRESHOLD },
     { "az", IMU_BASE_FILTER_THRESHOLD },
@@ -40,7 +40,7 @@ int16_t Sensor::getFloor(std::string &type) {
   static std::map<std::string, int> floorValues = {
     { "potentiometer", 20 },
     { "force", 500 },
-    { "sonar", 10 },
+    { "sonar", 30 },
     { "ax", IMU_FLOOR },
     { "ay", IMU_FLOOR },
     { "az", IMU_FLOOR },
@@ -56,7 +56,7 @@ int16_t Sensor::getCeil(std::string &type) {
   static std::map<std::string, int> ceilValues = {
     { "potentiometer", 1000 },
     { "force", 1000 },
-    { "sonar", 30 },
+    { "sonar", 80 },
     { "ax", IMU_CEIL },
     { "ay", IMU_CEIL },
     { "az", IMU_CEIL },
@@ -319,24 +319,40 @@ bool Sensor::isSibling(const std::vector<std::string> &SIBLINGS) {
 }
 
 void Sensor::sendSerialMidiMessage(HardwareSerial *Serial2) {
-  if (this->_midiMessage == "controlChange") {
-    if (this->currentValue != this->previousValue) {
-      Sensor::writeSerialMidiMessage(this->_statusCode, this->_controllerNumber, this->currentValue, Serial2);
-    }
+  if (this->_midiMessage == "controlChange" && this->currentValue != this->previousValue) {
+    Sensor::writeSerialMidiMessage(this->_statusCode, this->_controllerNumber, this->currentValue, Serial2);
   }
-  if (this->_midiMessage == "gate") {
-    if (this->toggleStatus != this->previousToggleStatus) {
-      if (this->toggleStatus) {
-        Sensor::writeSerialMidiMessage(144, 60, 127, Serial2);
-      } else {
-        Sensor::writeSerialMidiMessage(128, 60, 127, Serial2);
-      }
+  if (this->_midiMessage == "gate" && this->toggleStatus != this->previousToggleStatus) {
+    if (this->toggleStatus) {
+      Sensor::writeSerialMidiMessage(144, 60, 127, Serial2);
+    } else {
+      Sensor::writeSerialMidiMessage(128, 60, 127, Serial2);
     }
   }
 }
 
+void Sensor::run(MPU6050 *accelgyro, Adafruit_VL53L0X *lox, const uint8_t &activeSiblings) {
+  int16_t rawValue = this->getRawValue(accelgyro, lox);
+  this->setPreviousRawValue(rawValue);
+  this->setDataBuffer(rawValue);
+  this->setMeasuresCounter(1);
+  if (this->isAboveThreshold()) {
+    const unsigned long currentDebounceValue = millis();
+    this->setCurrentDebounceValue(currentDebounceValue);
+    const int16_t averageValue = this->runNonBlockingAverageFilter();
+    const uint8_t sensorMappedValue = this->getMappedMidiValue(averageValue);
+    this->setPreviousValue(this->currentValue);
+    this->setCurrentValue(sensorMappedValue);
+    this->debounce(accelgyro, lox);
+    this->sendSerialMidiMessage(&Serial2);
+    this->setMeasuresCounter(0);
+    this->setDataBuffer(0);
+    this->setThresholdBasedOnActiveSiblings(activeSiblings);
+  }
+}
+
 /**
-  * For ESP32 device.
+  * TODO: Test for ESP32 device.
   **/
 // void Sensor::sendBleMidiMessage(BLEMidiServerClass *serverInstance) {
 //   if (this->_midiMessage == "controlChange") {
@@ -360,34 +376,11 @@ void Sensor::sendSerialMidiMessage(HardwareSerial *Serial2) {
 //   }
 // }
 
-void Sensor::run(MPU6050 *accelgyro, Adafruit_VL53L0X *lox, const uint8_t &activeSiblings) {
-  int16_t rawValue = this->getRawValue(accelgyro, lox);
-  this->setPreviousRawValue(rawValue);
-  this->setDataBuffer(rawValue);
-  this->setMeasuresCounter(1);
-  if (this->isAboveThreshold()) {
-    const unsigned long currentDebounceValue = millis();
-    this->setCurrentDebounceValue(currentDebounceValue);
-    const int16_t averageValue = this->runNonBlockingAverageFilter();
-    const uint8_t sensorMappedValue = this->getMappedMidiValue(averageValue);
-    this->setPreviousValue(this->currentValue);
-    this->setCurrentValue(sensorMappedValue);
-    this->debounce(accelgyro, lox);
-    this->sendSerialMidiMessage(&Serial2);
-    this->setMeasuresCounter(0);
-    this->setDataBuffer(0);
-    this->setThresholdBasedOnActiveSiblings(activeSiblings);
-  }
-}
-
-//// //// //// //// //// //// //// //// //// //// //// //// //// ////
-
 // const uint8_t ERROR_LED = 2;
 // const uint8_t PITCH_BEND_BUTTON = 32;
 // const uint8_t PITCH_BEND_LED = 18;
-/**
-  * For loop function in esp32
-  **/
+
+
 // const bool isBendActive = Sensor::isPitchButtonActive(currentButtonState, lastButtonState, toggleStatus, PITCH_BEND_BUTTON);
 // Sensor* infraredSensor = Sensor::getSensorBySensorType(SENSORS, "infrared");
 // Sensor::runPitchBendLogic(infraredSensor, isBendActive, pitchBendLedState, PITCH_BEND_LED);
@@ -398,7 +391,7 @@ void Sensor::run(MPU6050 *accelgyro, Adafruit_VL53L0X *lox, const uint8_t &activ
 // _debounceThreshold = Sensor::getInitialValue(_sensorType, "debounce");
 
 /**
-  * TODO: check ESP32 compatibility with struct (wasn't working before).
+  * check ESP32 compatibility with struct (wasn't working before).
   **/
 // static std::map<std::string, int> IMU_CONSTANTS = {
 //   { "floor", 60 },
