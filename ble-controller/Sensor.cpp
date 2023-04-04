@@ -35,12 +35,13 @@ int16_t Sensor::getFilterThreshold(std::string &type) {
   return filterThresholdValues[type];
 }
 
+static const int16_t SONAR_FLOOR = 45;
 
 int16_t Sensor::getFloor(std::string &type) {
   static std::map<std::string, int> floorValues = {
     { "potentiometer", 20 },
     { "force", 500 },
-    { "sonar", 30 },
+    { "sonar", SONAR_FLOOR },
     { "ax", IMU_FLOOR },
     { "ay", IMU_FLOOR },
     { "az", IMU_FLOOR },
@@ -56,7 +57,7 @@ int16_t Sensor::getCeil(std::string &type) {
   static std::map<std::string, int> ceilValues = {
     { "potentiometer", 1000 },
     { "force", 1000 },
-    { "sonar", 80 },
+    { "sonar", SONAR_FLOOR + 25 },
     { "ax", IMU_CEIL },
     { "ay", IMU_CEIL },
     { "az", IMU_CEIL },
