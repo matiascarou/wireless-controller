@@ -7,7 +7,6 @@
 #include <vector>
 #include <map>
 #include "Utils.h"
-// #include <BLEMidi.h>
 
 class Sensor {
 private:
@@ -69,7 +68,6 @@ public:
   void setThreshold(uint8_t value);
   void setThresholdBasedOnActiveSiblings(const uint8_t &amountOfActiveSiblings);
   void setMidiMessage(std::string value);
-  // void sendBleMidiMessage(BLEMidiServerClass *serverInstance);
   void sendSerialMidiMessage(HardwareSerial *Serial2);
   void setMidiChannel(uint8_t channel);
   void debounce(MPU6050 *accelgyro, Adafruit_VL53L0X *lox);
@@ -202,7 +200,6 @@ public:
   }
 
   // static void writeSerialMidiMessage(uint8_t statusCode, uint8_t controllerNumber, uint8_t sensorValue, HardwareSerial *Serial2) {
-  //   // Utils::printMidiMessage(statusCode, controllerNumber, sensorValue);
   //   static const byte rightGuillemet[] = { 0xC2, 0xBB };  //UTF-8 character for separating MIDI messages: 11000010, 10111011
   //   Serial2->write(char(statusCode));
   //   Serial2->write(char(controllerNumber));
@@ -211,10 +208,9 @@ public:
   // }
 
   /**
-  * TODO: Check if approach below is noticeable faster
+  * Check if this approach is noticeable faster than the one above
   **/
   static void writeSerialMidiMessage(uint8_t statusCode, uint8_t controllerNumber, uint8_t sensorValue, HardwareSerial *Serial2) {
-    // Utils::printMidiMessage(statusCode, controllerNumber, sensorValue);
     uint16_t rightGuillemet = 0xBB00 | 0xC2;  // combine the two bytes into a single uint16_t value
     Serial2->write(&statusCode, 1);
     Serial2->write(&controllerNumber, 1);

@@ -4,7 +4,6 @@
 #include <math.h>
 #include <vector>
 #include <map>
-// #include <BLEMidi.h>
 
 static const int IMU_FLOOR = 700;
 static const int IMU_CEIL = 15700;
@@ -35,7 +34,7 @@ int16_t Sensor::getFilterThreshold(std::string &type) {
   return filterThresholdValues[type];
 }
 
-static const int16_t SONAR_FLOOR = 45;
+static const int16_t SONAR_FLOOR = 40;
 
 int16_t Sensor::getFloor(std::string &type) {
   static std::map<std::string, int> floorValues = {
@@ -57,7 +56,7 @@ int16_t Sensor::getCeil(std::string &type) {
   static std::map<std::string, int> ceilValues = {
     { "potentiometer", 1000 },
     { "force", 1000 },
-    { "sonar", SONAR_FLOOR + 25 },
+    { "sonar", SONAR_FLOOR + 30 },
     { "ax", IMU_CEIL },
     { "ay", IMU_CEIL },
     { "az", IMU_CEIL },
@@ -381,6 +380,10 @@ void Sensor::run(MPU6050 *accelgyro, Adafruit_VL53L0X *lox, const uint8_t &activ
 // const uint8_t PITCH_BEND_BUTTON = 32;
 // const uint8_t PITCH_BEND_LED = 18;
 
+// bool currentButtonState = false;
+// bool lastButtonState = false;
+// bool toggleStatus = false;
+// bool pitchBendLedState = false;
 
 // const bool isBendActive = Sensor::isPitchButtonActive(currentButtonState, lastButtonState, toggleStatus, PITCH_BEND_BUTTON);
 // Sensor* infraredSensor = Sensor::getSensorBySensorType(SENSORS, "infrared");
@@ -444,3 +447,12 @@ void Sensor::run(MPU6050 *accelgyro, Adafruit_VL53L0X *lox, const uint8_t &activ
 // int16_t Sensor::getInitialValue(std::string &sensorType, std::string valueType) {
 //   return values[sensorType].getValue(valueType);
 // }
+
+// // // // // // // // // // // // // //
+
+// unsigned long currentTime = 0;
+// unsigned long previousTime = 0;
+// int timeBuffer = 0;
+// int counter = 0;
+
+// Utils::printRuntimeOverrallValue(counter, timeBuffer, previousTime, currentTime, 20);
