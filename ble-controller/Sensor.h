@@ -6,6 +6,7 @@
 #include "Wire.h"
 #include <vector>
 #include <map>
+#include <string>
 #include "Utils.h"
 
 class Sensor {
