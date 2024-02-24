@@ -5,10 +5,12 @@
 #include "Sensor.h"
 #include "Adafruit_VL53L0X.h"
 
+// #define HWSERIAL Serial2
 MPU6050 accelgyro;
 Adafruit_VL53L0X lox = Adafruit_VL53L0X();
 
 std::vector<Sensor*> SENSORS = Sensor::initializeStm32Sensors();
+// std::vector<Sensor*> SENSORS = Sensor::initializeTeensySensors();
 HardwareSerial Serial2(PA3, PA2);  //RX, TX
 
 void setup() {

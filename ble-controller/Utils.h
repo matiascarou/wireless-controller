@@ -2,12 +2,6 @@
 #define UTILS_H
 
 namespace Utils {
-// static uint32_t setAndGetEsp32CpuFrequency(const uint32_t& Freq) {
-//   setCpuFrequencyMhz(Freq);
-//   const uint32_t esp32ProcessorSpeed = getCpuFrequencyMhz();
-//   delay(500);
-//   return esp32ProcessorSpeed;
-// }
 static void printRuntimeOverrallValue(int& counter, int& timeBuffer, unsigned long& previousTime, unsigned long& currentTime, uint8_t CYCLES_AMOUNT = 20) {
   if (counter % CYCLES_AMOUNT == 0 && counter != 0) {
     Serial.print("Average running time of ");

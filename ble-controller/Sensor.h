@@ -8,6 +8,7 @@
 #include <map>
 #include <string>
 #include "Utils.h"
+#include <algorithm>
 
 class Sensor {
 private:
@@ -40,6 +41,14 @@ private:
   uint8_t lsb = 0;
   uint8_t counter = 0;
 public:
+  /**
+     * @brief Constructs a Sensor object.
+     * 
+     * @param sensorType The type of sensor: potentiometer | force | sonar | ax | ay.
+     * @param controllerNumber The MIDI controller number. 
+     * @param pin The analog/digital input pin, basically the sensor raw value.
+     * @param intPin The on/off switch to initialize the sensor.
+     */
   Sensor(const std::string &sensorType, const uint8_t &controllerNumber, const uint8_t &pin = 0, const uint8_t &intPin = 0);
   std::string _sensorType;
   std::string _midiMessage;
@@ -87,35 +96,60 @@ public:
   }
 
   /**
-  * For ESP32 device.
-  **/
-  static std::vector<Sensor *> initializeEsp32Sensors() {
-    const static std::vector<Sensor *> SENSORS = {
-      new Sensor("potentiometer", 102, 15),
-      new Sensor("potentiometer", 103, 36),
-      new Sensor("force", 104, 4),
-      new Sensor("ax", 105, 0, 19),
-      new Sensor("ay", 106, 0, 5),
-      new Sensor("infrared", 108, 0, 17),
-    };
-    return SENSORS;
-  }
-
-  /**
   * For STM32 device.
+  * Current connected/available digital pins are: 
+  * PB12
+  * PB13 
+  * PB14 
+  * PB15 
+  * PB3
+  * PB8 - buggy
+  * PB9 
   **/
   static std::vector<Sensor *> initializeStm32Sensors() {
     const static std::vector<Sensor *> SENSORS = {
       new Sensor("potentiometer", 102, PA0),
       new Sensor("potentiometer", 103, PA1),
       new Sensor("potentiometer", 104, PA4),
-      new Sensor("force", 105, PB1, PB8),
-      new Sensor("sonar", 106, PB5, PB15),
+      new Sensor("force", 105, PB1, PB3),
+      new Sensor("sonar", 106, PB5, PB13),
       new Sensor("ax", 107, 0, PB12),
       new Sensor("ay", 108, 0, PB14),
     };
     return SENSORS;
   }
+
+  /**
+  * For ESP32 device.
+  **/
+  // static std::vector<Sensor *> initializeEsp32Sensors() {
+  //   const static std::vector<Sensor *> SENSORS = {
+  //     new Sensor("potentiometer", 102, 15),
+  //     new Sensor("potentiometer", 103, 36),
+  //     new Sensor("force", 104, 4),
+  //     new Sensor("ax", 105, 0, 19),
+  //     new Sensor("ay", 106, 0, 5),
+  //     new Sensor("infrared", 108, 0, 17),
+  //   };
+  //   return SENSORS;
+  // }
+
+  /**
+  * For Teensy device.
+  **/
+  // static std::vector<Sensor *> initializeTeensySensors() {
+  //   const static std::vector<Sensor *> SENSORS = {
+  //     // new Sensor("potentiometer", 102, PA0),
+  //     // new Sensor("potentiometer", 103, PA1),
+  //     // new Sensor("potentiometer", 104, PA4),
+  //     // new Sensor("force", 105, PB1, PB8),
+  //     // new Sensor("sonar", 106, PB5, PB15),
+  //     new Sensor("ax", 107, 0),
+  //     new Sensor("ay", 108, 0),
+  //     // new Sensor("infrared", 109, 0),
+  //   };
+  //   return SENSORS;
+  // }
 
   static Sensor *getSensorBySensorType(std::vector<Sensor *> SENSORS, std::string sensorType) {
     for (Sensor *SENSOR : SENSORS) {
@@ -165,7 +199,6 @@ public:
   static void testInfraredSensorConnection(Adafruit_VL53L0X &lox, uint8_t i2c_addr, const uint8_t &ERROR_LED, TwoWire *i2c = &Wire) {
     if (!lox.begin(i2c_addr, false, &Wire)) {
       Serial.println("Failed to boot VL53L0X");
-      digitalWrite(ERROR_LED, HIGH);
     } else {
       Serial.println("Succesfully connected to VL53L0X!");
     }
@@ -212,6 +245,7 @@ public:
   * Check if this approach is noticeable faster than the one above
   **/
   static void writeSerialMidiMessage(uint8_t statusCode, uint8_t controllerNumber, uint8_t sensorValue, HardwareSerial *Serial2) {
+    // Utils::printMidiMessage(statusCode, controllerNumber, sensorValue);
     uint16_t rightGuillemet = 0xBB00 | 0xC2;  // combine the two bytes into a single uint16_t value
     Serial2->write(&statusCode, 1);
     Serial2->write(&controllerNumber, 1);

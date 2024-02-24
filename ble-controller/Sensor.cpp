@@ -4,6 +4,7 @@
 #include <math.h>
 #include <vector>
 #include <map>
+#include <string>
 
 static const int IMU_FLOOR = 700;
 static const int IMU_CEIL = 15700;
@@ -375,84 +376,3 @@ void Sensor::run(MPU6050 *accelgyro, Adafruit_VL53L0X *lox, const uint8_t &activ
 //     }
 //   }
 // }
-
-// const uint8_t ERROR_LED = 2;
-// const uint8_t PITCH_BEND_BUTTON = 32;
-// const uint8_t PITCH_BEND_LED = 18;
-
-// bool currentButtonState = false;
-// bool lastButtonState = false;
-// bool toggleStatus = false;
-// bool pitchBendLedState = false;
-
-// const bool isBendActive = Sensor::isPitchButtonActive(currentButtonState, lastButtonState, toggleStatus, PITCH_BEND_BUTTON);
-// Sensor* infraredSensor = Sensor::getSensorBySensorType(SENSORS, "infrared");
-// Sensor::runPitchBendLogic(infraredSensor, isBendActive, pitchBendLedState, PITCH_BEND_LED);
-
-// _floor = Sensor::getInitialValue(_sensorType, "floor");
-// _ceil = Sensor::getInitialValue(_sensorType, "ceil");
-// _threshold = Sensor::getInitialValue(_sensorType, "threshold");
-// _debounceThreshold = Sensor::getInitialValue(_sensorType, "debounce");
-
-/**
-  * check ESP32 compatibility with struct (wasn't working before).
-  **/
-// static std::map<std::string, int> IMU_CONSTANTS = {
-//   { "floor", 60 },
-//   { "ceil", 15700 },
-//   { "filter_threshold", 80 },
-//   { "debounce_threshold", 0 }
-// };
-
-// struct InitialValue {
-//   int16_t floor;
-//   int16_t ceil;
-//   int16_t threshold;
-//   int16_t debounce;
-
-//   int16_t getValue(std::string &valueType) {
-//     if (valueType == "floor") {
-//       return floor;
-//     }
-//     if (valueType == "ceil") {
-//       return ceil;
-//     }
-//     if (valueType == "threshold") {
-//       return threshold;
-//     }
-//     if (valueType == "debounce") {
-//       return debounce;
-//     }
-//     return -1;
-//   }
-// };
-
-// static const int IMU_FLOOR = 60;
-// static const int IMU_CEIL = 15700;
-// static const int IMU_BASE_FILTER_THRESHOLD = 80;
-// static const int IMU_DEBOUNCE_THRESHOLD = 0;
-
-// static std::map<std::string, InitialValue> values = {
-//   { "potentiometer", { 20, 1023, 30, 0 } },
-//   { "force", { 20, 1023, 20, 15 } },
-//   { "sonar", { 6, 30, 40, 100 } },
-//   { "ax", { IMU_FLOOR, IMU_CEIL, IMU_BASE_FILTER_THRESHOLD, IMU_DEBOUNCE_THRESHOLD } },
-//   { "ay", { IMU_FLOOR, IMU_CEIL, IMU_BASE_FILTER_THRESHOLD, IMU_DEBOUNCE_THRESHOLD } },
-//   { "az", { IMU_FLOOR, IMU_CEIL, IMU_BASE_FILTER_THRESHOLD, IMU_DEBOUNCE_THRESHOLD } },
-//   { "gx", { IMU_FLOOR, IMU_CEIL, IMU_BASE_FILTER_THRESHOLD, IMU_DEBOUNCE_THRESHOLD } },
-//   { "gy", { IMU_FLOOR, IMU_CEIL, IMU_BASE_FILTER_THRESHOLD, IMU_DEBOUNCE_THRESHOLD } },
-//   { "gz", { IMU_FLOOR, IMU_CEIL, IMU_BASE_FILTER_THRESHOLD, IMU_DEBOUNCE_THRESHOLD } },
-// };
-
-// int16_t Sensor::getInitialValue(std::string &sensorType, std::string valueType) {
-//   return values[sensorType].getValue(valueType);
-// }
-
-// // // // // // // // // // // // // //
-
-// unsigned long currentTime = 0;
-// unsigned long previousTime = 0;
-// int timeBuffer = 0;
-// int counter = 0;
-
-// Utils::printRuntimeOverrallValue(counter, timeBuffer, previousTime, currentTime, 20);
