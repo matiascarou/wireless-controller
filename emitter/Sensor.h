@@ -12,6 +12,34 @@
 
 class Sensor {
 private:
+  /**
+   * In case amount of sensors increase, using a map could improve performance/maintainability
+   **/
+  // std::map<std::string, std::function<int16_t(MPU6050 *accelgyro)>> mappingFunction = {
+  //   { "potentiometer", [this](MPU6050 *accelgyro) {
+  //      return analogRead(_pin);
+  //    } },
+  //   { "force", [this](MPU6050 *accelgyro) {
+  //      return analogRead(_pin);
+  //    } },
+  //   { "sonar", [this](MPU6050 *accelgyro) {
+  //      const uint32_t pulse = pulseIn(_pin, HIGH);
+  //      const int16_t inches = pulse / 147;
+  //      return inches;
+  //    } },
+  //   { "ax", [this](MPU6050 *accelgyro) {
+  //      const int16_t rawValue = accelgyro->getAccelerationX();
+  //      return constrain(rawValue, 0, _ceil);
+  //    } },
+  //   { "ay", [this](MPU6050 *accelgyro) {
+  //      const int16_t rawValue = accelgyro->getAccelerationY();
+  //      return constrain(rawValue, 0, _ceil);
+  //    } },
+  //   { "az", [this](MPU6050 *accelgyro) {
+  //      const int16_t rawValue = accelgyro->getAccelerationZ();
+  //      return constrain(rawValue, 0, _ceil);
+  //    } },
+  // };
   uint8_t _controllerNumber;
   char _channel;
   uint8_t _statusCode;

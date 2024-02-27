@@ -5,6 +5,7 @@
 #include <vector>
 #include <map>
 #include <string>
+#include <functional>
 
 static const int IMU_FLOOR = 700;
 static const int IMU_CEIL = 15700;
@@ -189,22 +190,21 @@ bool Sensor::isSwitchDebounced() {
 
 int16_t Sensor::getRawValue(MPU6050 *accelgyro, Adafruit_VL53L0X *lox) {
 
+  /**
+   * In case amount of sensors increase, using a map could improve performance/maintainability
+   **/
+
+  // auto it = mappingFunction.find(_sensorType);
+  // return it->second(accelgyro);
+
+  // if (it != mappingFunction.end()) {
+  //   return it->second(accelgyro);
+  // }
+
+  // return 0;
+
   if (_sensorType == "potentiometer" || _sensorType == "force") {
     return analogRead(_pin);
-  }
-
-  if (_sensorType == "sonar") {
-    const uint32_t pulse = pulseIn(_pin, HIGH);
-    const int16_t inches = pulse / 147;
-    return inches;
-  }
-
-  if (_sensorType == "infrared") {
-    VL53L0X_RangingMeasurementData_t measure;
-
-    lox->rangingTest(&measure, false);
-
-    return measure.RangeStatus != 4 && measure.RangeMilliMeter >= _floor / 2 ? measure.RangeMilliMeter : this->previousRawValue;
   }
 
   if (_sensorType == "ax") {
@@ -222,6 +222,12 @@ int16_t Sensor::getRawValue(MPU6050 *accelgyro, Adafruit_VL53L0X *lox) {
     return constrain(rawValue, 0, _ceil);
   }
 
+  if (_sensorType == "sonar") {
+    const uint32_t pulse = pulseIn(_pin, HIGH);
+    const int16_t inches = pulse / 147;
+    return inches;
+  }
+
   if (_sensorType == "gx") {
     const int16_t rawValue = accelgyro->getRotationX();
     return constrain(rawValue, 0, _ceil);
@@ -236,6 +242,19 @@ int16_t Sensor::getRawValue(MPU6050 *accelgyro, Adafruit_VL53L0X *lox) {
     const int16_t rawValue = accelgyro->getRotationZ();
     return constrain(rawValue, 0, _ceil);
   }
+
+  /**
+  * Not being used for now
+  **/
+
+  if (_sensorType == "infrared") {
+    VL53L0X_RangingMeasurementData_t measure;
+
+    lox->rangingTest(&measure, false);
+
+    return measure.RangeStatus != 4 && measure.RangeMilliMeter >= _floor / 2 ? measure.RangeMilliMeter : this->previousRawValue;
+  }
+
 
   return 0;
 }
